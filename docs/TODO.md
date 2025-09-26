@@ -3,12 +3,14 @@
 ## ✅ Completed
 
 ### Project Setup & Architecture
+
 - [x] Analyzed existing codebase and API schemas (frontpage.ts, lab.ts)
 - [x] Confirmed OpenTUI React installation and dependencies
 - [x] Set up TypeScript configuration
 - [x] Created production-ready file structure
 
 ### Core Infrastructure
+
 - [x] **Types**: `src/types/index.ts` - Centralized type definitions
 - [x] **API Service**: `src/services/api.ts` - API calls for frontpage, articles, search, tags
 - [x] **Navigation Hook**: `src/hooks/useNavigation.ts` - Page routing and selection state management
@@ -16,8 +18,9 @@
 - [x] **Frontpage Page**: `src/pages/FrontpagePage.tsx` - Complete frontpage view with sections
 
 ### Main Application
+
 - [x] **App Structure**: `src/App.tsx` with navigation system
-- [x] **Keyboard Controls**: 
+- [x] **Keyboard Controls**:
   - q = quit
   - Esc = back/home
   - Arrow keys = navigate
@@ -29,6 +32,7 @@
 ## 🔧 In Progress
 
 ### TypeScript Integration Issues
+
 - [ ] Fix OpenTUI JSX element recognition
 - [ ] Resolve style syntax errors (using wrong OpenTUI style format)
 - [ ] Add proper module declarations for OpenTUI React types
@@ -36,6 +40,7 @@
 ## 📋 TODO - High Priority
 
 ### Page Implementation
+
 - [ ] **Article Detail Page**: `src/pages/ArticlePage.tsx`
   - Display full article content
   - Show metadata (author, date, tags)
@@ -51,12 +56,14 @@
   - Tag-based filtering
 
 ### Navigation Enhancements
+
 - [ ] Implement proper back navigation history
 - [ ] Add search functionality across pages
 - [ ] Improve keyboard shortcuts documentation
 - [ ] Add help/shortcuts overlay (h key)
 
 ### Data & API Integration
+
 - [ ] Test all API endpoints with real data
 - [ ] Implement proper error handling for API failures
 - [ ] Add retry logic for failed requests
@@ -65,6 +72,7 @@
 ## 📋 TODO - Medium Priority
 
 ### User Experience
+
 - [ ] **Loading States**: Better loading animations
 - [ ] **Error Handling**: User-friendly error messages
 - [ ] **Pagination**: For long lists (articles, jobs)
@@ -72,13 +80,15 @@
 - [ ] **Bookmarks**: Save favorite articles/jobs
 
 ### Performance
+
 - [ ] Implement lazy loading for large datasets
 - [ ] Add debouncing for search inputs
 - [ ] Optimize re-renders in navigation
 - [ ] Add data caching layer
 
 ### Content Features
-- [ ] **Article Reading**: 
+
+- [ ] **Article Reading**:
   - Full-screen reading mode
   - Text size adjustment
   - Syntax highlighting for code blocks
@@ -89,17 +99,20 @@
 ## 📋 TODO - Low Priority
 
 ### Internationalization
-- [ ] **i18n Support**: Norwegian/English language switching
+
+- [ ] **i18n Support**: Norwegian-only for now
 - [ ] **Date Formatting**: Locale-specific date formats
 - [ ] **Number Formatting**: Norwegian number formats
 
 ### Configuration
+
 - [ ] **Settings Page**: User preferences
 - [ ] **Theme Support**: Light/dark mode
 - [ ] **Keyboard Customization**: Custom key bindings
 - [ ] **Cache Settings**: Cache duration preferences
 
 ### Advanced Features
+
 - [ ] **Offline Mode**: Cache articles for offline reading
 - [ ] **Export**: Save articles to file
 - [ ] **RSS Integration**: RSS feed reader
@@ -108,11 +121,13 @@
 ## 🐛 Known Issues
 
 ### Current Bugs
+
 - [ ] OpenTUI TypeScript integration problems
 - [ ] Style syntax errors with OpenTUI components
 - [ ] JSX elements not properly recognized
 
 ### Technical Debt
+
 - [ ] Add comprehensive error boundaries
 - [ ] Improve type safety throughout codebase
 - [ ] Add unit tests for core functionality
@@ -121,7 +136,8 @@
 ## 🧪 Testing
 
 ### Test Coverage Needed
-- [ ] **Unit Tests**: 
+
+- [ ] **Unit Tests**:
   - API service functions
   - Navigation hook logic
   - Component rendering
@@ -136,6 +152,7 @@
 ## 📚 Documentation
 
 ### Documentation Tasks
+
 - [ ] **API Documentation**: Document all API endpoints
 - [ ] **Component Documentation**: Props and usage examples
 - [ ] **User Guide**: How to use the TUI
@@ -145,18 +162,21 @@
 ## 🚀 Release Planning
 
 ### MVP (Minimum Viable Product)
+
 - [ ] Fix TypeScript/OpenTUI integration
 - [ ] Complete all core pages (Article, Listings, Tags)
 - [ ] Test full navigation flow
 - [ ] Basic error handling
 
 ### v1.0 Release
+
 - [ ] All high priority features
 - [ ] Comprehensive testing
 - [ ] Documentation complete
 - [ ] Performance optimized
 
 ### Future Versions
+
 - [ ] i18n support (v1.1)
 - [ ] Advanced features (v1.2+)
 - [ ] Mobile-specific optimizations (v2.0)
