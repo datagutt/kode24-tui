@@ -1,0 +1,17 @@
+{
+  "name": "kode24-tui",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@opentui/core": "^0.1.25",
+    "@opentui/react": "^0.1.25",
+    "zod": "^4",
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
