@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    // Environment setup & latest features
-    "lib": ["ESNext"],
+    // Enable latest features
+    "lib": ["ESNext", "DOM"],
     "target": "ESNext",
-    "module": "Preserve",
+    "module": "ESNext",
     "moduleDetection": "force",
     "jsx": "react-jsx",
+    "jsxImportSource": "@opentui/react",
     "allowJs": true,
 
     // Bundler mode
@@ -18,12 +19,15 @@
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
 
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
-  }
+    "noPropertyAccessFromIndexSignature": false,
+    
+    "rootDir": "src",
+    "outDir": "dist",
+    "customConditions": ["bun"],
+  },
+  "include": ["src"]
 }
