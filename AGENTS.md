@@ -11,7 +11,9 @@
 
 - **Docs location**: <https://github.com/sst/opentui> - check `docs/` folder and `readme.md` in each package
 - **When docs are insufficient**: Always examine source code at <https://github.com/sst/opentui/blob/main/packages/react/src/components/index.ts>
+- **Examples**: Examples for React usage can be found at <https://github.com/sst/opentui/tree/main/packages/react/examples>
 - **Component reference**: Use source code to understand available props, types, and usage patterns
+- Additional info is avaialble in `TUI.MD`
 
 ## Code Style & Conventions
 
