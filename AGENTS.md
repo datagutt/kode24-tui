@@ -28,6 +28,11 @@
 - **Component reference**: Use source code to understand available props, types, and usage patterns
 - Additional info is avaialble in `TUI.MD`
 
+## Documentation
+
+All documentation files should be put in docs/.
+All TODOs should be put in TODO.md and updated.
+
 ## Code Style & Conventions
 
 - **Runtime**: Bun with TypeScript (ES modules, `"type": "module"`)
