@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Frontpage } from '../types/index.js';
+import { themeColors } from '../theme/colors.js';
 
 interface FrontpagePageProps {
   frontpageData: Frontpage;
@@ -19,13 +20,13 @@ export const FrontpagePage = ({
   return (
     <box style={{ flexDirection: "row", width: "100%", height: "100%" }}>
       {/* Sidebar with sections */}
-      <box style={{ width: 30, backgroundColor: "gray", flexDirection: "column", padding: 1 }}>
-        <text content="📑 Sections" style={{ fg: 'white', attributes: 1 }} />
+      <box style={{ width: 30, backgroundColor: themeColors.navigation.background, flexDirection: "column", padding: 1 }}>
+        <text content="📑 Sections" style={{ fg: themeColors.navigation.normal, attributes: 1 }} />
         {frontpageData.frontpage.map((section, index) => (
-          <box key={index} style={{ marginTop: 1, backgroundColor: index === selectedSection ? 'cyan' : undefined }}>
+          <box key={index} style={{ marginTop: 1, backgroundColor: index === selectedSection ? themeColors.navigation.selected : undefined }}>
             <text 
               content={`${index === selectedSection ? '▶' : ' '} ${section.title}`} 
-              style={{ fg: index === selectedSection ? 'black' : 'cyan' }} 
+              style={{ fg: index === selectedSection ? themeColors.navigation.selectedText : themeColors.tag.name }} 
             />
           </box>
         ))}

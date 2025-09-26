@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api.js';
+import { useTheme } from '../hooks/useTheme.js';
 
 interface ArticlePageProps {
   articleId: string;
@@ -10,6 +11,7 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const theme = useTheme();
 
   useEffect(() => {
     async function fetchArticle() {
@@ -30,7 +32,7 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
   if (loading) {
     return (
       <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
-        <text content="Loading article..." style={{ fg: 'blue' }} />
+        <text content="Loading article..." style={theme.styles.loading} />
       </box>
     );
   }
@@ -57,13 +59,13 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
     <box style={{ flexDirection: "column", height: "100%", width: "100%", padding: 2 }}>
       {/* Article Header */}
       <box style={{ flexDirection: "column", marginBottom: 2, border: true, paddingBottom: 1 }}>
-        <text content={article.title || 'Article Title'} style={{ fg: 'white', attributes: 1, marginBottom: 1 }} />
+        <text content={article.title || 'Article Title'} style={{...theme.styles.title, marginBottom: 1}} />
         <text 
           content={`By ${article.author?.name || 'Unknown Author'} - ${article.publishedDate || 'Date Unknown'}`} 
-          style={{ fg: 'gray' }} 
+          style={theme.styles.muted} 
         />
         {article.subtitle && (
-          <text content={article.subtitle} style={{ fg: 'cyan', marginTop: 1 }} />
+          <text content={article.subtitle} style={{...theme.styles.subtitle, marginTop: 1}} />
         )}
         <box style={{ flexDirection: "row", marginTop: 1 }}>
           <text content={`❤️ ${article.reactions?.count || 0}`} style={{ fg: 'red', marginRight: 2 }} />
