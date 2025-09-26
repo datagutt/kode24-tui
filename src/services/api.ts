@@ -1,5 +1,7 @@
+import * as z from 'zod';
 import { FrontpageSchema } from '../schemas/frontpage.js';
-import type { Frontpage, Article } from '../types/index.js';
+import { LabSchema } from '../schemas/lab.js';
+import type { Frontpage, Lab } from '../types/index.js';
 
 const BASE_URL = 'https://docs.kode24.no/api';
 const LABRADOR_BASE = 'https://www.kode24.no';
@@ -26,17 +28,28 @@ export const api = {
     }
   },
 
-  async fetchArticle(articleId: string): Promise<any> {
+  async fetchArticle(articleId: string): Promise<Lab> {
     try {
       const response = await fetch(`${LABRADOR_BASE}/artikkel/${articleId}?lab_viewport=json&lab_content=full`);
       if (!response.ok) {
         throw new ApiError(`Failed to fetch article: ${response.statusText}`, response.status);
       }
       const data = await response.json();
-      // For now, return the raw data - we can add article schema validation later
-      return data as any;
+      
+      // Validate the response with Zod schema
+      const validatedData = LabSchema.parse(data);
+      
+      // Check if we have essential article data
+      if (!validatedData.page?.fields?.title && !validatedData.page?.fields?.bodytext) {
+        throw new ApiError('Article data is incomplete - missing title or content');
+      }
+      
+      return validatedData;
     } catch (error) {
       if (error instanceof ApiError) throw error;
+      if (error instanceof z.ZodError) {
+        throw new ApiError(`Invalid article data structure: ${error.message}`);
+      }
       throw new ApiError('Failed to fetch article data');
     }
   },

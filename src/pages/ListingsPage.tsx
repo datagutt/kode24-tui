@@ -55,10 +55,12 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
       </box>
 
       {/* Search Bar */}
-      <box style={{ border: true, marginBottom: 1, padding: 1 }}>
-        <text content="🔍 Search: " style={{ fg: 'yellow', marginRight: 1 }} />
-        <text content={searchQuery || 'Type to search...'} style={{ fg: 'white' }} />
-      </box>
+      {searchQuery && (
+        <box style={{ border: true, marginBottom: 1, padding: 1 }}>
+          <text content="🔍 Search: " style={{ fg: 'yellow', marginRight: 1 }} />
+          <text content={searchQuery} style={{ fg: 'white' }} />
+        </box>
+      )}
 
       {/* Job Filters */}
       <box style={{ flexDirection: "row", marginBottom: 1 }}>
@@ -98,14 +100,12 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
                       content={`🏢 ${job.company.name}`} 
                       style={{ fg: 'green', marginTop: 1 }} 
                     />
-                    <text 
-                      content="📍 Location not specified" 
-                      style={{ fg: 'cyan', marginTop: 1 }} 
-                    />
-                    <text 
-                      content={job.applicationTitle || 'No description available'} 
-                      style={{ fg: 'gray', marginTop: 1 }} 
-                    />
+                    {job.applicationTitle && (
+                      <text 
+                        content={job.applicationTitle} 
+                        style={{ fg: 'gray', marginTop: 1 }} 
+                      />
+                    )}
                   </box>
 
                   {/* Right: Job Meta */}
@@ -114,14 +114,7 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
                       content={job.type.toUpperCase()} 
                       style={{ fg: 'yellow', marginBottom: 1 }} 
                     />
-                    <text 
-                      content="💰 Salary not listed" 
-                      style={{ fg: 'green', marginBottom: 1 }} 
-                    />
-                    <text 
-                      content="⏰ No deadline" 
-                      style={{ fg: 'red', marginBottom: 1 }} 
-                    />
+
                     <text 
                       content={`📅 Posted ${new Date(job.published).toLocaleDateString()}`} 
                       style={{ fg: 'blue' }} 
@@ -129,11 +122,10 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
                   </box>
                 </box>
 
-                {/* Tags - Currently not available in schema */}
+                {/* Job type tag */}
                 <box style={{ flexDirection: "row", marginTop: 1 }}>
                   <text content="🏷️ " style={{ fg: 'cyan', marginRight: 1 }} />
-                  <text content={job.type} style={{ fg: 'cyan', marginRight: 1 }} />
-                  <text content="Job" style={{ fg: 'cyan' }} />
+                  <text content={job.type} style={{ fg: 'cyan' }} />
                 </box>
 
                 {/* Action hint */}

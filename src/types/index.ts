@@ -1,5 +1,6 @@
 // Re-export specific types to avoid conflicts
 export type { Frontpage, Article, Job, UpcomingEvent } from '../schemas/frontpage.js';
+export type { Lab, Page as LabPage } from '../schemas/lab.js';
 
 // Navigation types
 export type Page = 'frontpage' | 'article' | 'listings' | 'tags' | 'events';
