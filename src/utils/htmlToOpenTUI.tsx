@@ -1,4 +1,6 @@
 import React from 'react';
+import * as cheerio from 'cheerio';
+import { decode } from 'html-entities';
 
 interface ParsedElement {
   type: string;
@@ -7,96 +9,29 @@ interface ParsedElement {
   attributes?: Record<string, string>;
 }
 
-function decodeHTMLEntities(text: string): string {
-  const entityMap: Record<string, string> = {
-    '&nbsp;': ' ',
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&#39;': "'",
-    '&apos;': "'",
-    '&ldquo;': '"',
-    '&rdquo;': '"',
-    '&lsquo;': "'",
-    '&rsquo;': "'",
-    '&mdash;': '—',
-    '&ndash;': '–',
-    '&hellip;': '…',
-    '&copy;': '©',
-    '&reg;': '®',
-    '&trade;': '™',
-  };
-  
-  return text.replace(/&[a-zA-Z0-9#]+;/g, (entity) => {
-    return entityMap[entity] || entity;
+function cheerioToParsedElement($el: cheerio.Cheerio<any>): ParsedElement {
+  const el = $el[0];
+  if (el.type === 'text') {
+    return { type: 'text', content: el.data };
+  }
+  const type = el.name;
+  const attributes = el.attribs;
+  const children: ParsedElement[] = [];
+  $el.contents().each((i: number) => {
+    const $child = $el.contents().eq(i);
+    children.push(cheerioToParsedElement($child));
   });
+  return { type, children: children.length ? children : undefined, attributes };
 }
 
 export function parseHTML(html: string): ParsedElement[] {
-  // Simple HTML parser for basic elements
+  const decodedHtml = decode(html);
+  const $ = cheerio.load(`<div>${decodedHtml}</div>`);
   const elements: ParsedElement[] = [];
-  let currentPos = 0;
-  
-  while (currentPos < html.length) {
-    const nextTagStart = html.indexOf('<', currentPos);
-    
-    // Handle text content before next tag
-    if (nextTagStart === -1 || nextTagStart > currentPos) {
-      const textEnd = nextTagStart === -1 ? html.length : nextTagStart;
-      const textContent = html.slice(currentPos, textEnd).trim();
-      
-      if (textContent) {
-        elements.push({
-          type: 'text',
-          content: textContent
-        });
-      }
-      
-      if (nextTagStart === -1) break;
-      currentPos = nextTagStart;
-    }
-    
-    // Parse tag
-    const tagEnd = html.indexOf('>', currentPos);
-    if (tagEnd === -1) break;
-    
-    const tagContent = html.slice(currentPos + 1, tagEnd);
-    const isClosingTag = tagContent.startsWith('/');
-    const isSelfClosing = tagContent.endsWith('/');
-    
-    if (!isClosingTag) {
-      const tagName = tagContent.split(/\s/)[0].replace('/', '');
-      
-      if (isSelfClosing) {
-        // Self-closing tag like <br/>
-        elements.push({
-          type: tagName,
-          content: tagName === 'br' ? '\n' : ''
-        });
-      } else {
-        // Find closing tag
-        const closingTag = `</${tagName}>`;
-        const closingPos = html.indexOf(closingTag, tagEnd);
-        
-        if (closingPos !== -1) {
-          const innerContent = html.slice(tagEnd + 1, closingPos);
-          const children = parseHTML(innerContent);
-          
-          elements.push({
-            type: tagName,
-            children: children.length > 0 ? children : [{ type: 'text', content: innerContent }]
-          });
-          
-          currentPos = closingPos + closingTag.length;
-          continue;
-        }
-      }
-    }
-    
-    currentPos = tagEnd + 1;
-  }
-  
+  $('div').contents().each((i: number) => {
+    const $el = $('div').contents().eq(i);
+    elements.push(cheerioToParsedElement($el));
+  });
   return elements;
 }
 
