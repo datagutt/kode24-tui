@@ -31,23 +31,25 @@ export const TagsPage = ({ selectedTag, onTagSelect }: TagsPageProps) => {
     }
   }, [selectedTag]);
 
-  // Popular programming tags for demo purposes
+  // Kode24 tags from left menu navigation
   const popularTags: TagInfo[] = [
-    { name: 'JavaScript', count: 1247, description: 'Web development with JavaScript' },
-    { name: 'Python', count: 892, description: 'Python programming and data science' },
-    { name: 'React', count: 634, description: 'React.js and frontend development' },
-    { name: 'TypeScript', count: 423, description: 'TypeScript and type-safe development' },
-    { name: 'Node.js', count: 389, description: 'Server-side JavaScript with Node.js' },
-    { name: 'DevOps', count: 276, description: 'DevOps practices and tools' },
-    { name: 'AI', count: 234, description: 'Artificial Intelligence and Machine Learning' },
-    { name: 'Cloud', count: 198, description: 'Cloud computing and services' },
-    { name: 'Cybersecurity', count: 167, description: 'Security and privacy topics' },
-    { name: 'Mobile', count: 145, description: 'Mobile app development' },
-    { name: 'Go', count: 123, description: 'Go programming language' },
-    { name: 'Rust', count: 98, description: 'Rust systems programming' },
-    { name: 'Docker', count: 87, description: 'Containerization with Docker' },
-    { name: 'Kubernetes', count: 76, description: 'Container orchestration' },
-    { name: 'Database', count: 65, description: 'Database design and management' },
+    { name: 'lønn', count: 0, description: 'Lønn og kompensasjon for utviklere' },
+    { name: 'sikkerhet', count: 0, description: 'Sikkerhet og personvern' },
+    { name: 'meninger', count: 0, description: 'Meninger og debatter' },
+    { name: 'utdanning', count: 0, description: 'Utdanning og læring' },
+    { name: 'karriere', count: 0, description: 'Karriere og jobbmarked' },
+    { name: 'kontor', count: 0, description: 'Kontor og arbeidsplasser' },
+    { name: 'frontend', count: 0, description: 'Frontend-utvikling' },
+    { name: 'backend', count: 0, description: 'Backend-utvikling' },
+    { name: 'apputvikling', count: 0, description: 'Mobil- og app-utvikling' },
+    { name: 'devops', count: 0, description: 'DevOps og infrastruktur' },
+    { name: 'IoT', count: 0, description: 'Internet of Things' },
+    { name: 'maskinlæring', count: 0, description: 'Maskinlæring og AI' },
+    { name: 'design', count: 0, description: 'Design og UX' },
+    { name: 'tilgjengelighet', count: 0, description: 'Tilgjengelighet og universell utforming' },
+    { name: 'ukas koder', count: 0, description: 'Ukas koder' },
+    { name: 'inn/ut', count: 0, description: 'Inn og ut av bransjen' },
+    { name: 'hobby', count: 0, description: 'Hobby og fritidskoding' },
   ];
 
   useEffect(() => {
