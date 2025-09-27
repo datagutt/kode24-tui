@@ -136,7 +136,7 @@ export const FrontpagePage = ({
         <box style={{ width: 32, border: true, borderColor: themeColors.navigation.selected, backgroundColor: colors.surface.raised, flexDirection: "column", padding: 1 }}>
           <text content={t('recentJobs')} style={{ fg: themeColors.navigation.selectedText, attributes: 1 }} />
           {frontpageData.jobs.slice(0, 4).map(job => (
-            <JobCard key={job.id} job={job} />
+            <JobCard key={job.id} job={job} variant="compact" />
           ))}
 
           <text content={t('upcomingEvents')} style={{ fg: themeColors.navigation.selectedText, attributes: 1, marginTop: 2 }} />

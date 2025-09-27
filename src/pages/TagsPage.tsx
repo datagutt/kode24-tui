@@ -222,13 +222,20 @@ export const TagsPage = ({
             ) : (
               tagArticles
                 .slice(0, 10)
-                .map((article, index) => (
-                  <ArticleCard
-                    key={`${article.title}-${index}`}
-                    data={article}
-                    prefix={`${index + 1}.`}
-                  />
-                ))
+                .map((article, index) => {
+                  const tagMeta = article.tags?.length
+                    ? [`🏷️ ${article.tags.slice(0, 3).join(', ')}`]
+                    : undefined;
+                  return (
+                    <ArticleCard
+                      key={`${article.title}-${index}`}
+                      data={article}
+                      prefix={`${index + 1}.`}
+                      meta={tagMeta}
+                      variant="compact"
+                    />
+                  );
+                })
             )}
           </box>
         )}

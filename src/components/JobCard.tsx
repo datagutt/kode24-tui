@@ -1,4 +1,3 @@
-import type { Key } from 'react';
 import { useTheme } from '../hooks/useTheme.js';
 import type { Job } from '../types/index.js';
 
@@ -7,7 +6,8 @@ interface JobCardProps {
   selected?: boolean;
   prefix?: string;
   footnote?: string;
-  key?: Key;
+  variant?: 'default' | 'compact';
+  key?: string | number;
 }
 
 const typeGlyph: Record<Job['type'], string> = {
@@ -24,13 +24,16 @@ const formatDate = (value: string): string => {
   return new Date(timestamp).toLocaleDateString();
 };
 
-export const JobCard = ({ job, selected, prefix, footnote }: JobCardProps) => {
+export const JobCard = ({ job, selected, prefix, footnote, variant }: JobCardProps) => {
   const theme = useTheme();
+  const kind = variant ?? 'default';
   const badge = `${typeGlyph[job.type]} ${job.type.toUpperCase()}`;
   const published = formatDate(job.published);
   const bg = selected ? theme.navigation.selected : theme.colors.surface.card;
   const fg = selected ? theme.navigation.selectedText : theme.job.title;
   const borderColor = selected ? theme.navigation.selected : theme.colors.border.subtle;
+  const pad = kind === 'compact' ? 1 : 2;
+  const gap = kind === 'compact' ? 0 : 1;
 
   return (
     <box
@@ -38,32 +41,32 @@ export const JobCard = ({ job, selected, prefix, footnote }: JobCardProps) => {
         flexDirection: 'column',
         border: true,
         borderColor,
-        padding: 1,
-        marginBottom: 1,
+        padding: pad,
+        marginBottom: kind === 'compact' ? 0 : 1,
         backgroundColor: bg,
       }}
     >
       <box style={{ flexDirection: 'row' }}>
-        {prefix && (
+        {prefix ? (
           <text content={`${prefix} `} style={{ fg: theme.colors.text.secondary }} />
-        )}
+        ) : null}
         <text content={job.title} style={{ fg, attributes: 1 }} />
       </box>
 
-      {job.applicationTitle && (
-        <text content={job.applicationTitle} style={{ fg: theme.colors.text.accent, marginTop: 0 }} />
-      )}
+      {job.applicationTitle ? (
+        <text content={job.applicationTitle} style={{ fg: theme.colors.text.accent, marginTop: gap }} />
+      ) : null}
 
-      <text content={`🏢 ${job.company.name}`} style={{ fg: theme.job.company, marginTop: 0 }} />
+      <text content={`🏢 ${job.company.name}`} style={{ fg: theme.job.company, marginTop: gap }} />
 
-      <box style={{ flexDirection: 'row', marginTop: 0 }}>
+      <box style={{ flexDirection: 'row', marginTop: gap }}>
         <text content={badge} style={{ fg: theme.job.type, marginRight: 2 }} />
         <text content={`📅 ${published}`} style={{ fg: theme.colors.text.secondary }} />
       </box>
 
-      {footnote && (
-        <text content={footnote} style={{ fg: theme.colors.text.secondary, marginTop: 0 }} />
-      )}
+      {footnote ? (
+        <text content={footnote} style={{ fg: theme.colors.text.secondary, marginTop: gap }} />
+      ) : null}
     </box>
   );
 };
