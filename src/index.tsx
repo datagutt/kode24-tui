@@ -7,7 +7,7 @@ import { HelpOverlay } from './components/HelpOverlay.js';
 import { FrontpagePage } from './pages/FrontpagePage.js';
 import { ArticlePage } from './pages/ArticlePage.js';
 import { ListingsPage } from './pages/ListingsPage.js';
-import { TagsPage } from './pages/TagsPage.js';
+import { TagsPage, popularTags } from './pages/TagsPage.js';
 import type { Frontpage } from './types/index.js';
 
 export const App = () => {
@@ -15,6 +15,7 @@ export const App = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentArticleId, setCurrentArticleId] = useState<string | null>(null);
+  const [selectedTagName, setSelectedTagName] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
 
   const { navigation, navigateToPage, goBack, updateSelection } = useNavigation();
@@ -79,6 +80,20 @@ export const App = () => {
       if (key.name === 'e') {
         // Quick navigation to events
         navigateToPage('events');
+      }
+    }
+
+    // Navigation for tags
+    if (navigation.currentPage === 'tags') {
+      if (key.name === 'up' && navigation.selectedIndex > 0) {
+        updateSelection(navigation.selectedIndex - 1);
+      }
+      if (key.name === 'down' && navigation.selectedIndex < popularTags.length - 1) {
+        updateSelection(navigation.selectedIndex + 1);
+      }
+      if (key.name === 'return') {
+        // Select the tag
+        setSelectedTagName(popularTags[navigation.selectedIndex].name);
       }
     }
   });
@@ -189,6 +204,7 @@ export const App = () => {
         return (
           <TagsPage
             selectedTag={navigation.selectedIndex}
+            selectedTagName={selectedTagName}
             onTagSelect={(tag: string) => {
               // Could navigate to tag articles view
               console.log('Selected tag:', tag);
