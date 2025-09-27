@@ -81,10 +81,6 @@ export const FrontpagePage = ({
       >
         <box style={{ flexDirection: "column" }}>
           <text
-            content="kode24"
-            style={{ fg: themeColors.navigation.selectedText, attributes: 1 }}
-          />
-          <text
             content={t("latestArticles")}
             style={{ fg: themeColors.navigation.selectedText, marginTop: 0 }}
           />

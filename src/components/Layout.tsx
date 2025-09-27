@@ -2,6 +2,7 @@ import React from "react";
 import type { Page } from "../types/index.js";
 import { themeColors } from "../theme/colors.js";
 import { t } from "../i18n/index.js";
+import { RGBA } from "@opentui/core";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -47,16 +48,14 @@ export const Layout = ({ children, currentPage, breadcrumb }: LayoutProps) => {
         width="100%"
         backgroundColor={themeColors.header.background}
         flexDirection="column"
-        padding={1}
+        padding={3}
       >
-        <box alignItems="center" justifyContent="center">
-          <text
-            content={t("headerTitle")}
-            fg={themeColors.header.text}
-            attributes={1}
+        <box alignItems="center" justifyContent="center" flexDirection="column">
+          <ascii-font
+            text={t("headerTitle")}
+            fg={RGBA.fromHex(themeColors.header.text)}
+            marginBottom={1.5}
           />
-        </box>
-        <box style={{ alignItems: "center", justifyContent: "center" }}>
           <text
             content={getBreadcrumbText()}
             style={{ fg: themeColors.header.accent }}
