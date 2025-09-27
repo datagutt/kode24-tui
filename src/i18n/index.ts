@@ -4,6 +4,7 @@ export const translations: Record<string, string> = {
   upcomingEvents: "📅 Kommende arrangementer",
   recentComments: "💬 Nylige kommentarer",
   latestArticles: "📰 Siste artikler",
+  moreFrontpageArticles: "📰 Flere forsidesaker",
   quickActions: "📑 Hurtighandlinger",
   recentJobs: "💼 Nylige jobber",
   viewAllJobs: "Se alle jobber",

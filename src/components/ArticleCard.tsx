@@ -28,7 +28,9 @@ export const ArticleCard = ({ data, selected, prefix, footnote, meta, variant }:
   const kind = variant ?? 'default';
   const bg = selected ? theme.navigation.selected : theme.colors.surface.card;
   const fg = selected ? theme.navigation.selectedText : theme.colors.text.primary;
-  const borderColor = selected ? theme.navigation.selected : theme.colors.border.subtle;
+  const borderColor = selected
+    ? theme.navigation.selectedText
+    : theme.colors.border.subtle;
   const subtitleColor = selected ? theme.navigation.selectedText : theme.article.subtitle;
   const pad = kind === 'compact' ? 1 : 2;
   const gap = kind === 'compact' ? 0 : 1;
