@@ -37,9 +37,13 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
 
   // Focus the scrollbox when article loads
   useEffect(() => {
-    if (article && scrollboxRef.current) {
-      scrollboxRef.current.focus();
+    const node = scrollboxRef.current;
+    if (article && node) {
+      node.focus();
     }
+    return () => {
+      node?.blur?.();
+    };
   }, [article]);
 
   if (loading) {

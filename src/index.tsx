@@ -11,6 +11,25 @@ import { TagsPage, popularTags } from './pages/TagsPage.js';
 import type { Frontpage } from './types/index.js';
 import { t } from './i18n/index.js';
 
+type KeyEvent = {
+  name: string;
+  ctrl?: boolean;
+  meta?: boolean;
+  shift?: boolean;
+};
+
+type KeyAwareRenderable = {
+  focused?: boolean;
+  handleKeyPress?: (key: KeyEvent) => boolean;
+};
+
+const hasKeyHandler = (value: unknown): value is KeyAwareRenderable => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  return typeof (value as { handleKeyPress?: unknown }).handleKeyPress === 'function';
+};
+
 export const App = () => {
   const [frontpageData, setFrontpageData] = useState<Frontpage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,13 +41,11 @@ export const App = () => {
   const { navigation, navigateToPage, goBack, updateSelection } = useNavigation();
   const renderer = useRenderer();
 
-  useKeyboard((key: any) => {
+  useKeyboard((key: KeyEvent) => {
     // Check if there's a focused renderable that can handle keyboard events
     const focusedRenderable = renderer?.currentFocusedRenderable;
-    if (focusedRenderable && typeof (focusedRenderable as any).handleKeyPress === 'function') {
-      if ((focusedRenderable as any).handleKeyPress(key)) {
-        return; // Event was handled by the focused renderable
-      }
+    if (hasKeyHandler(focusedRenderable) && focusedRenderable.focused && focusedRenderable.handleKeyPress?.(key)) {
+      return; // Event was handled by the focused renderable
     }
 
     if (key.name === 'q') {
