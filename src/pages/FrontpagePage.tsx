@@ -59,21 +59,6 @@ export const FrontpagePage = ({
   const blockHeaderHeight = 2;
   const blockGapHeight = 1;
 
-  const measureArticlesBlock = (
-    block: Extract<ContentBlock, { type: "articles" }>
-  ): number =>
-    blockHeaderHeight +
-    block.articles.length *
-      (block.chunkIndex === 0 ? heroRowHeight : compactRowHeight) +
-    blockGapHeight;
-
-  const measureSectionBlock = (
-    block: Extract<ContentBlock, { type: "section" }>
-  ): number => {
-    const items = clampSectionArticles(block.section);
-    return blockHeaderHeight + items.length * sectionRowHeight + blockGapHeight;
-  };
-
   const buildContentBlocks = (
     articles: FrontpageArticle[],
     sections: FrontpageSection[],
@@ -140,68 +125,6 @@ export const FrontpagePage = ({
     );
   };
 
-  const findSectionScrollTop = (
-    blocks: ContentBlock[],
-    targetSectionIndex: number,
-    offset = 0
-  ): number | null => {
-    if (blocks.length === 0) {
-      return null;
-    }
-    const [block, ...rest] = blocks;
-    if (block.type === "section") {
-      if (block.sectionIndex === targetSectionIndex) {
-        return offset;
-      }
-      return findSectionScrollTop(
-        rest,
-        targetSectionIndex,
-        offset + measureSectionBlock(block)
-      );
-    }
-    return findSectionScrollTop(
-      rest,
-      targetSectionIndex,
-      offset + measureArticlesBlock(block)
-    );
-  };
-
-  const findArticleScrollTop = (
-    blocks: ContentBlock[],
-    targetArticleId: string | null,
-    offset = 0
-  ): number | null => {
-    if (!targetArticleId || blocks.length === 0) {
-      return null;
-    }
-    const [block, ...rest] = blocks;
-    if (block.type === "articles") {
-      const itemHeight =
-        block.chunkIndex === 0 ? heroRowHeight : compactRowHeight;
-      const index = block.articles.findIndex(
-        (article) => article.id === targetArticleId
-      );
-      if (index >= 0) {
-        return offset + blockHeaderHeight + index * itemHeight;
-      }
-      return findArticleScrollTop(
-        rest,
-        targetArticleId,
-        offset + measureArticlesBlock(block)
-      );
-    }
-    const items = clampSectionArticles(block.section);
-    const index = items.findIndex((article) => article.id === targetArticleId);
-    if (index >= 0) {
-      return offset + blockHeaderHeight + index * sectionRowHeight;
-    }
-    return findArticleScrollTop(
-      rest,
-      targetArticleId,
-      offset + measureSectionBlock(block)
-    );
-  };
-
   const contentBlocks = useMemo(
     () =>
       buildContentBlocks(
@@ -212,6 +135,35 @@ export const FrontpagePage = ({
     [frontpageData.frontpage, frontpageData.latestArticles]
   );
 
+  const metrics = useMemo(() => {
+    const articleOffsets: Record<string, { top: number; height: number }> = {};
+    const sectionOffsets = new Map<number, { top: number; height: number }>();
+    let offset = 0;
+    contentBlocks.forEach((block) => {
+      const blockStart = offset;
+      offset += blockHeaderHeight;
+      if (block.type === "articles") {
+        const rowHeight = block.chunkIndex === 0 ? heroRowHeight : compactRowHeight;
+        block.articles.forEach((article) => {
+          articleOffsets[article.id] = { top: offset, height: rowHeight };
+          offset += rowHeight;
+        });
+      } else {
+        const items = clampSectionArticles(block.section);
+        items.forEach((article) => {
+          articleOffsets[article.id] = { top: offset, height: sectionRowHeight };
+          offset += sectionRowHeight;
+        });
+        sectionOffsets.set(block.sectionIndex, {
+          top: blockStart,
+          height: offset - blockStart,
+        });
+      }
+      offset += blockGapHeight;
+    });
+    return { articleOffsets, sectionOffsets };
+  }, [contentBlocks]);
+
   const selectedArticleId = useMemo(
     () => frontpageData.latestArticles[selectedArticle]?.id ?? null,
     [frontpageData.latestArticles, selectedArticle]
@@ -221,25 +173,59 @@ export const FrontpagePage = ({
     if (!sectionsRef.current) {
       return;
     }
-    const sectionTop = findSectionScrollTop(contentBlocks, selectedSection);
-    if (sectionTop === null) {
+    const sectionMetrics = metrics.sectionOffsets.get(selectedSection);
+    if (!sectionMetrics) {
       return;
     }
+    const scrollTop = sectionsRef.current.scrollTop ?? 0;
+    const viewportHeight =
+      typeof sectionsRef.current.height === "number"
+        ? sectionsRef.current.height
+        : 60;
     const buffer = 2;
-    sectionsRef.current.scrollTop = Math.max(0, sectionTop - buffer);
-  }, [contentBlocks, selectedSection]);
+    const top = sectionMetrics.top;
+    const bottom = sectionMetrics.top + sectionMetrics.height;
+    const viewBottom = scrollTop + viewportHeight;
+    if (top < scrollTop + buffer) {
+      sectionsRef.current.scrollTop = Math.max(0, top - buffer);
+      return;
+    }
+    if (bottom > viewBottom - buffer) {
+      sectionsRef.current.scrollTop = Math.max(
+        0,
+        bottom - viewportHeight + buffer
+      );
+    }
+  }, [metrics, selectedSection]);
 
   useEffect(() => {
-    if (!sectionsRef.current) {
+    if (!sectionsRef.current || !selectedArticleId) {
       return;
     }
-    const articleTop = findArticleScrollTop(contentBlocks, selectedArticleId);
-    if (articleTop === null) {
+    const articleMetrics = metrics.articleOffsets[selectedArticleId];
+    if (!articleMetrics) {
       return;
     }
-    const buffer = 4;
-    sectionsRef.current.scrollTop = Math.max(0, articleTop - buffer);
-  }, [contentBlocks, selectedArticleId]);
+    const scrollTop = sectionsRef.current.scrollTop ?? 0;
+    const viewportHeight =
+      typeof sectionsRef.current.height === "number"
+        ? sectionsRef.current.height
+        : 60;
+    const buffer = 2;
+    const top = articleMetrics.top;
+    const bottom = articleMetrics.top + articleMetrics.height;
+    const viewBottom = scrollTop + viewportHeight;
+    if (top < scrollTop + buffer) {
+      sectionsRef.current.scrollTop = Math.max(0, top - buffer);
+      return;
+    }
+    if (bottom > viewBottom - buffer) {
+      sectionsRef.current.scrollTop = Math.max(
+        0,
+        bottom - viewportHeight + buffer
+      );
+    }
+  }, [metrics, selectedArticleId]);
 
   const formatArticleDate = (value: Date | string): string => {
     if (value instanceof Date) {

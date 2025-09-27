@@ -75,10 +75,48 @@ export const App = () => {
         updateSelection(navigation.selectedIndex + 1);
       }
       if (key.name === 'left' && navigation.selectedSection > 0) {
-        updateSelection(navigation.selectedIndex, navigation.selectedSection - 1);
+        const nextSection = navigation.selectedSection - 1;
+        const nextIndex = (() => {
+          const section = frontpageData.frontpage[nextSection];
+          const firstArticleId = section?.articles[0]?.id;
+          if (!firstArticleId) {
+            return navigation.selectedIndex;
+          }
+          const matchIndex = frontpageData.latestArticles.findIndex(
+            (article) => article.id === firstArticleId
+          );
+          if (matchIndex >= 0) {
+            return matchIndex;
+          }
+          return navigation.selectedIndex;
+        })();
+        const clamped = Math.min(
+          Math.max(nextIndex, 0),
+          frontpageData.latestArticles.length - 1
+        );
+        updateSelection(clamped, nextSection);
       }
       if (key.name === 'right' && navigation.selectedSection < frontpageData.frontpage.length - 1) {
-        updateSelection(navigation.selectedIndex, navigation.selectedSection + 1);
+        const nextSection = navigation.selectedSection + 1;
+        const nextIndex = (() => {
+          const section = frontpageData.frontpage[nextSection];
+          const firstArticleId = section?.articles[0]?.id;
+          if (!firstArticleId) {
+            return navigation.selectedIndex;
+          }
+          const matchIndex = frontpageData.latestArticles.findIndex(
+            (article) => article.id === firstArticleId
+          );
+          if (matchIndex >= 0) {
+            return matchIndex;
+          }
+          return navigation.selectedIndex;
+        })();
+        const clamped = Math.min(
+          Math.max(nextIndex, 0),
+          frontpageData.latestArticles.length - 1
+        );
+        updateSelection(clamped, nextSection);
       }
       if (key.name === 'return') {
         // Navigate to selected article
