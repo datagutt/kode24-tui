@@ -268,3 +268,13 @@ export const LabSchema = z.object({
   result: z.array(ResultSchema).optional(),
 });
 export type Lab = z.infer<typeof LabSchema>;
+
+// Search results schema (array of articles)
+export const SearchResultsSchema = z.array(ResultSchema);
+export type SearchResults = z.infer<typeof SearchResultsSchema>;
+
+// Tag articles response schema
+export const TagArticlesResponseSchema = z.object({
+  result: z.array(ResultSchema).optional(),
+});
+export type TagArticlesResponse = z.infer<typeof TagArticlesResponseSchema>;
