@@ -1,7 +1,7 @@
-import React from 'react';
-import type { Page } from '../types/index.js';
-import { themeColors } from '../theme/colors.js';
-import { t } from '../i18n/index.js';
+import React from "react";
+import type { Page } from "../types/index.js";
+import { themeColors } from "../theme/colors.js";
+import { t } from "../i18n/index.js";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,40 +12,77 @@ interface LayoutProps {
 export const Layout = ({ children, currentPage, breadcrumb }: LayoutProps) => {
   const getPageTitle = (page: Page): string => {
     switch (page) {
-      case 'frontpage': return '🏠 Frontpage';
-      case 'article': return '📰 Article';
-      case 'listings': return '💼 Job Listings';
-      case 'tags': return '🏷️  Tags';
-      case 'events': return '📅 Events';
-      default: return '📱 kode24.no';
+      case "frontpage":
+        return "🏠 Frontpage";
+      case "article":
+        return "📰 Article";
+      case "listings":
+        return "💼 Job Listings";
+      case "tags":
+        return "🏷️  Tags";
+      case "events":
+        return "📅 Events";
+      default:
+        return "📱 kode24.no";
     }
   };
 
   const getBreadcrumbText = (): string => {
     if (breadcrumb.length <= 1) return getPageTitle(currentPage);
-    return breadcrumb.map(page => getPageTitle(page as Page)).join(' > ');
+    return breadcrumb.map((page) => getPageTitle(page as Page)).join(" > ");
   };
 
   return (
-    <box style={{ flexDirection: "column", height: "100%", width: "100%" }}>
+    <box
+      alignItems="center"
+      justifyContent="center"
+      flexGrow={1}
+      flexDirection="column"
+      height="100%"
+      width="100%"
+    >
       {/* Header */}
-      <box style={{ height: 3, width: "100%", backgroundColor: themeColors.header.background, flexDirection: "column", padding: 1 }}>
-        <box style={{ alignItems: "center", justifyContent: "center" }}>
-          <text content={t('headerTitle')} style={{ fg: themeColors.header.text, attributes: 1 }} />
+      <box
+        height={3}
+        width="100%"
+        backgroundColor={themeColors.header.background}
+        flexDirection="column"
+        padding={1}
+      >
+        <box alignItems="center" justifyContent="center">
+          <text
+            content={t("headerTitle")}
+            fg={themeColors.header.text}
+            attributes={1}
+          />
         </box>
         <box style={{ alignItems: "center", justifyContent: "center" }}>
-          <text content={getBreadcrumbText()} style={{ fg: themeColors.header.accent }} />
+          <text
+            content={getBreadcrumbText()}
+            style={{ fg: themeColors.header.accent }}
+          />
         </box>
       </box>
-      
+
       {/* Main content */}
-      <box style={{ flexDirection: "column", width: "100%", height: "100%" }}>
+      <box flexGrow={1} flexDirection="column" height="100%" width="100%">
         {children}
       </box>
-      
+
       {/* Footer */}
-      <box style={{ height: 2, width: "100%", backgroundColor: themeColors.footer.background, alignItems: "center", justifyContent: "center" }}>
-        <text content={t('footerHelp')} style={{ fg: themeColors.footer.text }} />
+      <box
+        style={{
+          height: 2,
+          width: "100%",
+          backgroundColor: themeColors.footer.background,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <text
+          content={t("footerHelp")}
+          style={{ fg: themeColors.footer.text }}
+        />
       </box>
     </box>
   );

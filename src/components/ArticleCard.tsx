@@ -33,6 +33,7 @@ export const ArticleCard = ({ data, selected, prefix, footnote, meta, variant }:
   const pad = kind === 'compact' ? 1 : 2;
   const gap = kind === 'compact' ? 0 : 1;
   const authorDate = [data.author, data.date].filter(Boolean).join(' • ');
+  const showAuthorDate = Boolean(authorDate) && kind === 'default';
   const tagLine = data.tags?.length ? data.tags.join(', ') : '';
   const stats = [
     data.reactions !== undefined ? `❤️ ${data.reactions}` : null,
@@ -40,10 +41,11 @@ export const ArticleCard = ({ data, selected, prefix, footnote, meta, variant }:
     data.views !== undefined ? `👀 ${data.views}` : null,
     data.likes !== undefined ? `👍 ${data.likes}` : null,
   ].filter(Boolean) as string[];
-  const metaLine = meta?.filter(Boolean).join(' • ') ?? '';
+  const metas = meta?.filter(Boolean) ?? [];
   const showStats = stats.length > 0 && kind === 'default';
   const showExcerpt = Boolean(data.excerpt) && kind === 'default';
   const showTags = Boolean(tagLine) && kind === 'default';
+  const hasMeta = metas.length > 0;
 
   return (
     <box
@@ -67,12 +69,16 @@ export const ArticleCard = ({ data, selected, prefix, footnote, meta, variant }:
         <text content={data.subtitle} style={{ fg: subtitleColor, marginTop: gap }} />
       ) : null}
 
-      {authorDate ? (
+      {showAuthorDate ? (
         <text content={authorDate} style={{ fg: theme.colors.text.secondary, marginTop: gap }} />
       ) : null}
 
-      {metaLine ? (
-        <text content={metaLine} style={{ fg: theme.colors.text.secondary, marginTop: gap }} />
+      {hasMeta ? (
+        <box style={{ flexDirection: 'column', marginTop: gap }}>
+          {metas.map((item, index) => (
+            <text key={`${item}-${index}`} content={item} style={{ fg: theme.colors.text.secondary }} />
+          ))}
+        </box>
       ) : null}
 
       {showExcerpt ? (

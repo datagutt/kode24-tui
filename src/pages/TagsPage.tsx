@@ -74,12 +74,6 @@ export const TagsPage = ({
       setLoading(true);
       const articles = await api.fetchTagArticles(tagName);
       const mapped: ArticleCardData[] = articles.map((article, index) => {
-        const primaryByline = article.full_bylines?.[0];
-        const author = primaryByline
-          ? `${primaryByline.firstname}${
-              primaryByline.lastname ? ` ${primaryByline.lastname}` : ""
-            }`.trim()
-          : article.byline;
         const published =
           article.published instanceof Date
             ? article.published.toLocaleDateString()
@@ -93,13 +87,7 @@ export const TagsPage = ({
               })();
         return {
           title: article.title || t("articleNumber", { number: index + 1 }),
-          subtitle: article.teaserSubtitle || article.teaserTitle,
-          author: author || t("unknownAuthor"),
           date: published || t("dateUnknown"),
-          excerpt:
-            article.description ||
-            article.someDescription ||
-            article.teaserDescription,
           tags: article.tags?.slice(0, 3) ?? [],
         } satisfies ArticleCardData;
       });
@@ -223,15 +211,16 @@ export const TagsPage = ({
               tagArticles
                 .slice(0, 10)
                 .map((article, index) => {
-                  const tagMeta = article.tags?.length
-                    ? [`🏷️ ${article.tags.slice(0, 3).join(', ')}`]
-                    : undefined;
+                  const metas = [
+                    article.date ? `🗓️ ${article.date}` : null,
+                    article.tags?.length ? `🏷️ ${article.tags.join(', ')}` : null,
+                  ].filter(Boolean) as string[];
                   return (
                     <ArticleCard
                       key={`${article.title}-${index}`}
                       data={article}
                       prefix={`${index + 1}.`}
-                      meta={tagMeta}
+                      meta={metas.length > 0 ? metas : undefined}
                       variant="compact"
                     />
                   );
