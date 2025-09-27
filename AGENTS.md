@@ -54,3 +54,11 @@ All TODOs should be put in TODO.md and updated.
 - Use Zod for runtime validation and type safety
 - Prefer union types with `z.union()` for nullable fields
 - Use `z.coerce.date()` for date parsing from strings
+
+## HTTP Requests
+
+- **Library**: Use `@better-fetch/fetch` for all HTTP requests
+- **Configuration**: Create a shared instance with retry and timeout settings
+- **Retry Logic**: Exponential backoff with 3 attempts, 1-5 second delays
+- **Timeout**: 10 second timeout for all requests
+- **Schema Validation**: Use Zod schemas for response validation with `output` option
