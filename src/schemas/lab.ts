@@ -21,8 +21,8 @@ export const UploadedImagesJsonSchema = z.object({
 export type UploadedImagesJson = z.infer<typeof UploadedImagesJsonSchema>;
 
 export const DesktopFieldsSchema = z.object({
-  subtitle_style_json: TitleStyleJsonSchema,
-  title_style_json: TitleStyleJsonSchema,
+  subtitle_style_json: TitleStyleJsonSchema.optional(),
+  title_style_json: TitleStyleJsonSchema.optional(),
 });
 export type DesktopFields = z.infer<typeof DesktopFieldsSchema>;
 
