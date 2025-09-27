@@ -6,6 +6,7 @@ export const useNavigation = (initialPage: Page = 'frontpage') => {
     currentPage: initialPage,
     selectedIndex: 0,
     selectedSection: 0,
+    frontpageSection: 'middle',
     breadcrumb: [initialPage],
   }]);
 
@@ -18,6 +19,7 @@ export const useNavigation = (initialPage: Page = 'frontpage') => {
         currentPage: page,
         selectedIndex: resetSelection ? 0 : current.selectedIndex,
         selectedSection: resetSelection ? 0 : current.selectedSection,
+        frontpageSection: resetSelection ? 'middle' : current.frontpageSection,
         breadcrumb: [...current.breadcrumb, page],
       };
       return [...prev, newState];
@@ -31,13 +33,14 @@ export const useNavigation = (initialPage: Page = 'frontpage') => {
     });
   }, []);
 
-  const updateSelection = useCallback((selectedIndex: number, selectedSection?: number) => {
+  const updateSelection = useCallback((selectedIndex: number, selectedSection?: number, frontpageSection?: 'left' | 'middle' | 'right') => {
     setHistory(prev => {
       const current = prev[prev.length - 1];
       const newState = {
         ...current,
         selectedIndex,
         selectedSection: selectedSection ?? current.selectedSection,
+        frontpageSection: frontpageSection ?? current.frontpageSection,
       };
       return [...prev.slice(0, -1), newState];
     });
@@ -48,6 +51,7 @@ export const useNavigation = (initialPage: Page = 'frontpage') => {
       currentPage: 'frontpage',
       selectedIndex: 0,
       selectedSection: 0,
+      frontpageSection: 'middle',
       breadcrumb: ['frontpage'],
     }]);
   }, []);

@@ -27,6 +27,9 @@ interface FrontpagePageProps {
   frontpageData: Frontpage;
   selectedSection: number;
   selectedArticle: number;
+  frontpageSection: 'left' | 'middle' | 'right';
+  selectedTagIndex?: number;
+  selectedSidebarIndex?: number;
   onNavigateToArticle: (articleId: string) => void;
   onNavigateToListings: () => void;
 }
@@ -35,6 +38,9 @@ export const FrontpagePage = ({
   frontpageData,
   selectedSection,
   selectedArticle,
+  frontpageSection,
+  selectedTagIndex = 0,
+  selectedSidebarIndex = 0,
   onNavigateToArticle,
   onNavigateToListings,
 }: FrontpagePageProps) => {
@@ -165,12 +171,12 @@ export const FrontpagePage = ({
   }, [contentBlocks]);
 
   const selectedArticleId = useMemo(
-    () => frontpageData.latestArticles[selectedArticle]?.id ?? null,
-    [frontpageData.latestArticles, selectedArticle]
+    () => frontpageSection === 'middle' ? frontpageData.latestArticles[selectedArticle]?.id ?? null : null,
+    [frontpageData.latestArticles, selectedArticle, frontpageSection]
   );
 
   useEffect(() => {
-    if (!sectionsRef.current) {
+    if (!sectionsRef.current || frontpageSection !== 'middle') {
       return;
     }
     const sectionMetrics = metrics.sectionOffsets.get(selectedSection);
@@ -196,10 +202,10 @@ export const FrontpagePage = ({
         bottom - viewportHeight + buffer
       );
     }
-  }, [metrics, selectedSection]);
+  }, [metrics, selectedSection, frontpageSection]);
 
   useEffect(() => {
-    if (!sectionsRef.current || !selectedArticleId) {
+    if (!sectionsRef.current || !selectedArticleId || frontpageSection !== 'middle') {
       return;
     }
     const articleMetrics = metrics.articleOffsets[selectedArticleId];
@@ -225,7 +231,7 @@ export const FrontpagePage = ({
         bottom - viewportHeight + buffer
       );
     }
-  }, [metrics, selectedArticleId]);
+  }, [metrics, selectedArticleId, frontpageSection]);
 
   const formatArticleDate = (value: Date | string): string => {
     if (value instanceof Date) {
@@ -291,35 +297,44 @@ export const FrontpagePage = ({
         <box
           style={{
             width: 28,
-            backgroundColor: themeColors.navigation.background,
+            backgroundColor: frontpageSection === 'left' ? themeColors.navigation.selected : themeColors.navigation.background,
             border: true,
-            borderColor: themeColors.navigation.selected,
+            borderColor: frontpageSection === 'left' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
             flexDirection: "column",
             padding: 1,
           }}
         >
           <text
             content={t("categoriesTags")}
-            style={{ fg: themeColors.navigation.normal, attributes: 1 }}
+            style={{ 
+              fg: frontpageSection === 'left' ? themeColors.navigation.selectedText : themeColors.navigation.normal, 
+              attributes: 1 
+            }}
           />
           <scrollbox style={{ height: "80%", marginTop: 1 }}>
-            {popularTags.map((tag) => (
-              <box
-                key={tag.name}
-                style={{
-                  marginBottom: 1,
-                  padding: 1,
-                  border: true,
-                  borderColor: themeColors.navigation.selected,
-                  backgroundColor: colors.surface.card,
-                }}
-              >
-                <text
-                  content={`#${tag.name}`}
-                  style={{ fg: themeColors.tag.name, attributes: 1 }}
-                />
-              </box>
-            ))}
+            {popularTags.map((tag, index) => {
+              const isSelected = frontpageSection === 'left' && index === selectedTagIndex;
+              return (
+                <box
+                  key={tag.name}
+                  style={{
+                    marginBottom: 1,
+                    padding: 1,
+                    border: true,
+                    borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+                    backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
+                  }}
+                >
+                  <text
+                    content={`#${tag.name}`}
+                    style={{ 
+                      fg: isSelected ? themeColors.navigation.background : themeColors.tag.name, 
+                      attributes: 1 
+                    }}
+                  />
+                </box>
+              );
+            })}
           </scrollbox>
         </box>
 
@@ -336,7 +351,8 @@ export const FrontpagePage = ({
             style={{
               height: "100%",
               border: true,
-              borderColor: themeColors.navigation.selected,
+              borderColor: frontpageSection === 'middle' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+              backgroundColor: frontpageSection === 'middle' ? themeColors.navigation.selected : 'transparent',
               padding: 1,
             }}
           >
@@ -483,94 +499,142 @@ export const FrontpagePage = ({
           style={{
             width: 32,
             border: true,
-            borderColor: themeColors.navigation.selected,
-            backgroundColor: colors.surface.raised,
+            borderColor: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+            backgroundColor: frontpageSection === 'right' ? themeColors.navigation.selected : colors.surface.raised,
             flexDirection: "column",
             padding: 1,
           }}
         >
-          <text
-            content={t("recentJobs")}
-            style={{ fg: themeColors.navigation.selectedText, attributes: 1 }}
-          />
-          {frontpageData.jobs.slice(0, 4).map((job) => (
-            <JobCard key={job.id} job={job} variant="compact" />
-          ))}
-
-          <text
-            content={t("upcomingEvents")}
-            style={{
-              fg: themeColors.navigation.selectedText,
-              attributes: 1,
-              marginTop: 2,
-            }}
-          />
-          {frontpageData.events.upcomingEvents.slice(0, 3).map((event) => (
-            <box
-              key={event.name}
-              style={{
-                border: true,
-                borderColor: themeColors.navigation.selected,
-                marginTop: 1,
-                padding: 1,
-                backgroundColor: colors.surface.card,
-              }}
-            >
-              <text
-                content={event.name}
-                style={{ fg: themeColors.navigation.selectedText }}
-              />
-              <text
-                content={event.arrangedBy}
-                style={{ fg: themeColors.navigation.normal }}
-              />
-              <text
-                content={event.startDateFormatted}
-                style={{ fg: themeColors.navigation.normal }}
-              />
-            </box>
-          ))}
-
-          <text
-            content={t("recentComments")}
-            style={{
-              fg: themeColors.navigation.selectedText,
-              attributes: 1,
-              marginTop: 2,
-            }}
-          />
-          {frontpageData.newestComments.slice(0, 3).map((comment) => (
-            <box
-              key={comment.page_identifier}
-              style={{
-                border: true,
-                borderColor: themeColors.navigation.selected,
-                marginTop: 1,
-                padding: 1,
-                backgroundColor: colors.surface.card,
-              }}
-            >
-              <text
-                content={comment.user.name}
-                style={{ fg: themeColors.navigation.selectedText }}
-              />
-              <text
-                content={comment.bodySnippet.slice(0, 60)}
-                style={{ fg: themeColors.navigation.normal }}
-              />
-            </box>
-          ))}
-
-          <box style={{ marginTop: 2 }}>
+          <scrollbox style={{ height: "100%" }}>
             <text
-              content={t("viewAllJobs")}
-              style={{ fg: themeColors.navigation.selectedText, attributes: 1 }}
+              content={t("recentJobs")}
+              style={{ 
+                fg: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.normal, 
+                attributes: 1 
+              }}
             />
+            {frontpageData.jobs.slice(0, 4).map((job, index) => {
+              const isSelected = frontpageSection === 'right' && index === selectedSidebarIndex;
+              return (
+                <box
+                  key={job.id}
+                  style={{
+                    border: true,
+                    borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+                    backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
+                    marginTop: 1,
+                    padding: 1,
+                  }}
+                >
+                  <JobCard job={job} variant="compact" />
+                </box>
+              );
+            })}
+
             <text
-              content={t("pressEnter")}
-              style={{ fg: themeColors.navigation.selectedText, marginTop: 0 }}
+              content={t("upcomingEvents")}
+              style={{
+                fg: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.normal,
+                attributes: 1,
+                marginTop: 2,
+              }}
             />
-          </box>
+            {frontpageData.events.upcomingEvents.slice(0, 3).map((event, index) => {
+              const globalIndex = frontpageData.jobs.length + index;
+              const isSelected = frontpageSection === 'right' && globalIndex === selectedSidebarIndex;
+              return (
+                <box
+                  key={event.name}
+                  style={{
+                    border: true,
+                    borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+                    marginTop: 1,
+                    padding: 1,
+                    backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
+                  }}
+                >
+                  <text
+                    content={event.name}
+                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.selectedText }}
+                  />
+                  <text
+                    content={event.arrangedBy}
+                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
+                  />
+                  <text
+                    content={event.startDateFormatted}
+                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
+                  />
+                </box>
+              );
+            })}
+
+            <text
+              content={t("recentComments")}
+              style={{
+                fg: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.normal,
+                attributes: 1,
+                marginTop: 2,
+              }}
+            />
+            {frontpageData.newestComments.slice(0, 3).map((comment, index) => {
+              const globalIndex = frontpageData.jobs.length + frontpageData.events.upcomingEvents.length + index;
+              const isSelected = frontpageSection === 'right' && globalIndex === selectedSidebarIndex;
+              return (
+                <box
+                  key={comment.page_identifier}
+                  style={{
+                    border: true,
+                    borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+                    marginTop: 1,
+                    padding: 1,
+                    backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
+                  }}
+                >
+                  <text
+                    content={comment.user.name}
+                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.selectedText }}
+                  />
+                  <text
+                    content={comment.bodySnippet.slice(0, 60)}
+                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
+                  />
+                </box>
+              );
+            })}
+
+            <box style={{ marginTop: 2 }}>
+              {(() => {
+                const globalIndex = frontpageData.jobs.length + frontpageData.events.upcomingEvents.length + frontpageData.newestComments.length;
+                const isSelected = frontpageSection === 'right' && globalIndex === selectedSidebarIndex;
+                return (
+                  <box
+                    style={{
+                      border: true,
+                      borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+                      padding: 1,
+                      backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
+                    }}
+                  >
+                    <text
+                      content={t("viewAllJobs")}
+                      style={{ 
+                        fg: isSelected ? themeColors.navigation.background : themeColors.navigation.selectedText, 
+                        attributes: 1 
+                      }}
+                    />
+                    <text
+                      content={t("pressEnter")}
+                      style={{ 
+                        fg: isSelected ? themeColors.navigation.background : themeColors.navigation.selectedText, 
+                        marginTop: 0 
+                      }}
+                    />
+                  </box>
+                );
+              })()}
+            </box>
+          </scrollbox>
         </box>
       </box>
     </box>

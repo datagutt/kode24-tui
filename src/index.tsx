@@ -68,73 +68,117 @@ export const App = () => {
 
     // Navigation for frontpage
     if (navigation.currentPage === 'frontpage' && frontpageData) {
-      if (key.name === 'up' && navigation.selectedIndex > 0) {
-        updateSelection(navigation.selectedIndex - 1);
+      const currentSection = navigation.frontpageSection || 'middle';
+      
+      if (key.name === 'tab') {
+        // Tab between sections: left -> middle -> right -> left
+        const sections = ['left', 'middle', 'right'] as const;
+        const currentIndex = sections.indexOf(currentSection);
+        const nextIndex = (currentIndex + 1) % sections.length;
+        updateSelection(navigation.selectedIndex, navigation.selectedSection, sections[nextIndex]);
+        return;
       }
-      if (key.name === 'down' && navigation.selectedIndex < frontpageData.latestArticles.length - 1) {
-        updateSelection(navigation.selectedIndex + 1);
-      }
-      if (key.name === 'left' && navigation.selectedSection > 0) {
-        const nextSection = navigation.selectedSection - 1;
-        const nextIndex = (() => {
-          const section = frontpageData.frontpage[nextSection];
-          const firstArticleId = section?.articles[0]?.id;
-          if (!firstArticleId) {
+
+      if (currentSection === 'left') {
+        // Left sidebar navigation (tags)
+        if (key.name === 'up' && navigation.selectedIndex > 0) {
+          updateSelection(navigation.selectedIndex - 1, navigation.selectedSection, 'left');
+        }
+        if (key.name === 'down' && navigation.selectedIndex < popularTags.length - 1) {
+          updateSelection(navigation.selectedIndex + 1, navigation.selectedSection, 'left');
+        }
+        if (key.name === 'return') {
+          // Navigate to tag
+          navigateToPage('tags');
+        }
+      } else if (currentSection === 'middle') {
+        // Middle section navigation (main articles)
+        if (key.name === 'up' && navigation.selectedIndex > 0) {
+          updateSelection(navigation.selectedIndex - 1, navigation.selectedSection, 'middle');
+        }
+        if (key.name === 'down' && navigation.selectedIndex < frontpageData.latestArticles.length - 1) {
+          updateSelection(navigation.selectedIndex + 1, navigation.selectedSection, 'middle');
+        }
+        if (key.name === 'left' && navigation.selectedSection > 0) {
+          const nextSection = navigation.selectedSection - 1;
+          const nextIndex = (() => {
+            const section = frontpageData.frontpage[nextSection];
+            const firstArticleId = section?.articles[0]?.id;
+            if (!firstArticleId) {
+              return navigation.selectedIndex;
+            }
+            const matchIndex = frontpageData.latestArticles.findIndex(
+              (article) => article.id === firstArticleId
+            );
+            if (matchIndex >= 0) {
+              return matchIndex;
+            }
             return navigation.selectedIndex;
-          }
-          const matchIndex = frontpageData.latestArticles.findIndex(
-            (article) => article.id === firstArticleId
+          })();
+          const clamped = Math.min(
+            Math.max(nextIndex, 0),
+            frontpageData.latestArticles.length - 1
           );
-          if (matchIndex >= 0) {
-            return matchIndex;
-          }
-          return navigation.selectedIndex;
-        })();
-        const clamped = Math.min(
-          Math.max(nextIndex, 0),
-          frontpageData.latestArticles.length - 1
-        );
-        updateSelection(clamped, nextSection);
-      }
-      if (key.name === 'right' && navigation.selectedSection < frontpageData.frontpage.length - 1) {
-        const nextSection = navigation.selectedSection + 1;
-        const nextIndex = (() => {
-          const section = frontpageData.frontpage[nextSection];
-          const firstArticleId = section?.articles[0]?.id;
-          if (!firstArticleId) {
+          updateSelection(clamped, nextSection, 'middle');
+        }
+        if (key.name === 'right' && navigation.selectedSection < frontpageData.frontpage.length - 1) {
+          const nextSection = navigation.selectedSection + 1;
+          const nextIndex = (() => {
+            const section = frontpageData.frontpage[nextSection];
+            const firstArticleId = section?.articles[0]?.id;
+            if (!firstArticleId) {
+              return navigation.selectedIndex;
+            }
+            const matchIndex = frontpageData.latestArticles.findIndex(
+              (article) => article.id === firstArticleId
+            );
+            if (matchIndex >= 0) {
+              return matchIndex;
+            }
             return navigation.selectedIndex;
-          }
-          const matchIndex = frontpageData.latestArticles.findIndex(
-            (article) => article.id === firstArticleId
+          })();
+          const clamped = Math.min(
+            Math.max(nextIndex, 0),
+            frontpageData.latestArticles.length - 1
           );
-          if (matchIndex >= 0) {
-            return matchIndex;
+          updateSelection(clamped, nextSection, 'middle');
+        }
+        if (key.name === 'return') {
+          // Navigate to selected article
+          const selectedArticle = frontpageData.latestArticles[navigation.selectedIndex];
+          if (selectedArticle) {
+            navigateToArticle(selectedArticle.id);
           }
-          return navigation.selectedIndex;
-        })();
-        const clamped = Math.min(
-          Math.max(nextIndex, 0),
-          frontpageData.latestArticles.length - 1
-        );
-        updateSelection(clamped, nextSection);
-      }
-      if (key.name === 'return') {
-        // Navigate to selected article
-        const selectedArticle = frontpageData.latestArticles[navigation.selectedIndex];
-        if (selectedArticle) {
-          navigateToArticle(selectedArticle.id);
+        }
+      } else if (currentSection === 'right') {
+        // Right sidebar navigation (jobs/events)
+        const totalItems = frontpageData.jobs.length + frontpageData.events.upcomingEvents.length + frontpageData.newestComments.length + 1; // +1 for "view all jobs"
+        if (key.name === 'up' && navigation.selectedIndex > 0) {
+          updateSelection(navigation.selectedIndex - 1, navigation.selectedSection, 'right');
+        }
+        if (key.name === 'down' && navigation.selectedIndex < totalItems - 1) {
+          updateSelection(navigation.selectedIndex + 1, navigation.selectedSection, 'right');
+        }
+        if (key.name === 'return') {
+          // Handle selection based on index
+          if (navigation.selectedIndex < frontpageData.jobs.length) {
+            // Selected a job
+            navigateToPage('listings');
+          } else if (navigation.selectedIndex === totalItems - 1) {
+            // Selected "view all jobs"
+            navigateToPage('listings');
+          }
         }
       }
+
+      // Global shortcuts
       if (key.name === 'l') {
-        // Quick navigation to listings
         navigateToPage('listings');
       }
       if (key.name === 't') {
-        // Quick navigation to tags
         navigateToPage('tags');
       }
       if (key.name === 'e') {
-        // Quick navigation to events
         navigateToPage('events');
       }
     }
@@ -225,7 +269,10 @@ export const App = () => {
           <FrontpagePage
             frontpageData={frontpageData}
             selectedSection={navigation.selectedSection}
-            selectedArticle={navigation.selectedIndex}
+            selectedArticle={navigation.frontpageSection === 'middle' ? navigation.selectedIndex : 0}
+            frontpageSection={navigation.frontpageSection || 'middle'}
+            selectedTagIndex={navigation.frontpageSection === 'left' ? navigation.selectedIndex : 0}
+            selectedSidebarIndex={navigation.frontpageSection === 'right' ? navigation.selectedIndex : 0}
             onNavigateToArticle={navigateToArticle}
             onNavigateToListings={navigateToListings}
           />
