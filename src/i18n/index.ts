@@ -1,0 +1,75 @@
+export const translations: Record<string, string> = {
+  // Frontpage
+  sections: "📑 Seksjoner",
+  upcomingEvents: "📅 Kommende arrangementer",
+  recentComments: "💬 Nylige kommentarer",
+  latestArticles: "📰 Siste artikler",
+  quickActions: "📑 Hurtighandlinger",
+  recentJobs: "💼 Nylige jobber",
+  viewAllJobs: "Se alle jobber",
+
+  // Listings
+  loadingJobs: "Laster jobbannonser...",
+  jobListings: "💼 Jobbannonser",
+  foundJobs: "Fant {count} jobber",
+  search: "🔍 Søk: ",
+  filters: "Filtre: ",
+  allTypes: "Alle typer",
+  allLocations: "Alle steder",
+  allCompanies: "Alle selskaper",
+  noJobsFound: "Ingen jobber funnet",
+  tryAdjustingSearch: "Prøv å justere søket eller filtrene",
+  navJobs: "Navigasjon: ↑↓ Bla gjennom jobber | Enter Se detaljer | s Søk | f Filtrer",
+
+  // Tags
+  categoriesTags: "🏷️ Kategorier & Tags",
+  categoriesAvailable: "{count} kategorier tilgjengelig",
+  selectTag: "🏷️ Velg en tag",
+  chooseCategory: "Velg en kategori til venstre for å se relaterte artikler",
+  popularCategories: "Populære kategorier:",
+  jsWebDev: "• JavaScript & Webutvikling",
+  pythonData: "• Python & Datavitenskap",
+  devopsCloud: "• DevOps & Sky",
+  aiMl: "• AI & Maskinlæring",
+  articlesTaggedWith: "📰 Artikler tagget med \"{name}\"",
+  loadingArticles: "Laster artikler...",
+  noArticlesFound: "Ingen artikler funnet for denne taggen",
+  demoLimitation: "Dette kan være en demo-begrensning",
+
+  // Article
+  loadingArticle: "Laster artikkel...",
+  byAuthorDate: "Av {name} - {date}",
+  reactionsComments: "❤️ {reactions} reaksjoner | 💬 {comments} kommentarer",
+  tags: "🏷️ Tags",
+  noTags: "Ingen tags tilgjengelig",
+  navArticle: "Navigasjon: ↑↓ Rull | Esc Tilbake | q Avslutt",
+
+  // General
+  pressEnter: "Trykk Enter for å se detaljer",
+  pressEnterViewArticles: "Trykk Enter for å se artikler",
+
+  // Help
+  keyboardShortcuts: "Tastatursnarveier",
+  navigation: "Navigasjon:",
+  navUpDown: "  ↑/↓ - Naviger opp/ned",
+  navLeftRight: "  ←/→ - Naviger venstre/høyre (seksjoner)",
+  navEnter: "  Enter - Velg element",
+  navEsc: "  Esc - Gå tilbake",
+  pages: "Sider:",
+  pageListings: "  l - Stillingsutlysninger",
+  pageTags: "  t - Tags",
+  pageEvents: "  e - Arrangementer",
+  general: "Generelt:",
+  helpToggle: "  h - Vis/skjul denne hjelpen",
+  quit: "  q - Avslutt applikasjonen",
+  pressAnyKey: "Trykk en tast for å lukke",
+};
+
+export const t = (key: string, params?: Record<string, any>): string => {
+  let trans = translations[key];
+  if (!trans) return key;
+  if (params) {
+    trans = trans.replace(/{(\w+)}/g, (match, p) => params[p]?.toString() || match);
+  }
+  return trans;
+};

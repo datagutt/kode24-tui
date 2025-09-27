@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api.js';
+import { useScrollboxFocus } from '../hooks/useScrollboxFocus.js';
+import type { ScrollBoxRenderable } from '@opentui/core';
+import { t } from '../i18n/index.js';
 
 interface TagsPageProps {
   selectedTag: number;
@@ -17,6 +20,16 @@ export const TagsPage = ({ selectedTag, onTagSelect }: TagsPageProps) => {
   const [tagArticles, setTagArticles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedTagName, setSelectedTagName] = useState<string | null>(null);
+
+  const tagsScrollboxRef = useRef<ScrollBoxRenderable>(null);
+  const articlesScrollboxRef = useScrollboxFocus([tagArticles]);
+
+  useEffect(() => {
+    if (tagsScrollboxRef.current) {
+      const estimatedHeightPerTag = 5;
+      tagsScrollboxRef.current.scrollTop = selectedTag * estimatedHeightPerTag;
+    }
+  }, [selectedTag]);
 
   // Popular programming tags for demo purposes
   const popularTags: TagInfo[] = [
@@ -69,10 +82,10 @@ export const TagsPage = ({ selectedTag, onTagSelect }: TagsPageProps) => {
     <box style={{ flexDirection: "row", height: "100%", width: "100%" }}>
       {/* Left: Tags List */}
       <box style={{ width: "40%", flexDirection: "column", padding: 1 }}>
-        <text content="🏷️ Categories & Tags" style={{ fg: 'green', attributes: 1, marginBottom: 1 }} />
-        <text content={`${tags.length} categories available`} style={{ fg: 'gray', marginBottom: 1 }} />
+        <text content={t('categoriesTags')} style={{ fg: 'green', attributes: 1, marginBottom: 1 }} />
+        <text content={t('categoriesAvailable', { count: tags.length })} style={{ fg: 'gray', marginBottom: 1 }} />
         
-        <scrollbox style={{ height: "100%" }}>
+              <scrollbox ref={articlesScrollboxRef} style={{ height: "100%" }}>
           {tags.map((tag, index) => (
             <box 
               key={tag.name} 
@@ -102,7 +115,7 @@ export const TagsPage = ({ selectedTag, onTagSelect }: TagsPageProps) => {
                 )}
                 {index === selectedTag && (
                   <text 
-                    content="Press Enter to view articles" 
+                    content={t('pressEnterViewArticles')} 
                     style={{ fg: 'white', attributes: 1, marginTop: 1 }} 
                   />
                 )}
@@ -116,32 +129,32 @@ export const TagsPage = ({ selectedTag, onTagSelect }: TagsPageProps) => {
       <box style={{ width: "60%", flexDirection: "column", padding: 1 }}>
         {!selectedTagName ? (
           <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-            <text content="🏷️ Select a Tag" style={{ fg: 'cyan', attributes: 1, marginBottom: 1 }} />
-            <text content="Choose a category from the left to see related articles" style={{ fg: 'gray', marginBottom: 2 }} />
-            <text content="Popular categories:" style={{ fg: 'white', marginBottom: 1 }} />
-            <text content="• JavaScript & Web Development" style={{ fg: 'blue', marginBottom: 1 }} />
-            <text content="• Python & Data Science" style={{ fg: 'blue', marginBottom: 1 }} />
-            <text content="• DevOps & Cloud" style={{ fg: 'blue', marginBottom: 1 }} />
-            <text content="• AI & Machine Learning" style={{ fg: 'blue' }} />
+            <text content={t('selectTag')} style={{ fg: 'cyan', attributes: 1, marginBottom: 1 }} />
+            <text content={t('chooseCategory')} style={{ fg: 'gray', marginBottom: 2 }} />
+            <text content={t('popularCategories')} style={{ fg: 'white', marginBottom: 1 }} />
+            <text content={t('jsWebDev')} style={{ fg: 'blue', marginBottom: 1 }} />
+            <text content={t('pythonData')} style={{ fg: 'blue', marginBottom: 1 }} />
+            <text content={t('devopsCloud')} style={{ fg: 'blue', marginBottom: 1 }} />
+            <text content={t('aiMl')} style={{ fg: 'blue' }} />
           </box>
         ) : (
           <box style={{ flexDirection: "column", height: "100%" }}>
-            <text 
-              content={`📰 Articles tagged with "${selectedTagName}"`} 
-              style={{ fg: 'green', attributes: 1, marginBottom: 1 }} 
+            <text
+              content={t('articlesTaggedWith', { name: selectedTagName })}
+              style={{ fg: 'green', attributes: 1, marginBottom: 1 }}
             />
             
             {loading ? (
               <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-                <text content="Loading articles..." style={{ fg: 'blue' }} />
+                <text content={t('loadingArticles')} style={{ fg: 'blue' }} />
               </box>
             ) : tagArticles.length === 0 ? (
               <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-                <text content="No articles found for this tag" style={{ fg: 'yellow' }} />
-                <text content="This might be a demo limitation" style={{ fg: 'gray', marginTop: 1 }} />
+                <text content={t('noArticlesFound')} style={{ fg: 'yellow' }} />
+                <text content={t('demoLimitation')} style={{ fg: 'gray', marginTop: 1 }} />
               </box>
             ) : (
-              <scrollbox style={{ height: "100%" }}>
+        <scrollbox ref={tagsScrollboxRef} style={{ height: "100%" }}>
                 {tagArticles.slice(0, 20).map((article: any, index: number) => (
                   <box 
                     key={index} 

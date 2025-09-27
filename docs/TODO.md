@@ -23,11 +23,13 @@
 - [x] **Keyboard Controls**:
   - q = quit
   - Esc = back/home
-  - Arrow keys = navigate
+  - Arrow keys = navigate selections or scroll content
   - Enter = select
   - l = listings shortcut
+  - Scrollbox navigation: ↑↓ to scroll in focused scrollable areas
 - [x] **Routing Logic**: Multi-page support with breadcrumb navigation
 - [x] **Loading States**: Error handling and loading indicators
+- [x] **Scrollbox Keyboard Navigation**: Auto-focus and arrow key scrolling in all scrollable content areas
 
 ## 🔧 In Progress
 
@@ -104,7 +106,7 @@ _Currently no major items in progress - all high priority MVP features completed
 
 ### Internationalization
 
-- [ ] **i18n Support**: Norwegian-only for now
+- [x] **i18n Support**: Norwegian translations implemented
 - [ ] **Date Formatting**: Locale-specific date formats
 - [ ] **Number Formatting**: Norwegian number formats
 
@@ -188,4 +190,4 @@ _Currently no major items in progress - all high priority MVP features completed
 - **API**: Using existing kode24.no API endpoints
 - **Code Style**: Following project guidelines (single functions, minimal destructuring, avoid else/try-catch)
 
-Last Updated: 2025-01-27
+Last Updated: 2025-09-27

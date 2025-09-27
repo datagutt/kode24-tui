@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import type { Frontpage } from '../types/index.js';
 import { themeColors } from '../theme/colors.js';
+import type { ScrollBoxRenderable } from '@opentui/core';
+import { t } from '../i18n/index.js';
 
 interface FrontpagePageProps {
   frontpageData: Frontpage;
@@ -17,11 +19,20 @@ export const FrontpagePage = ({
   onNavigateToArticle,
   onNavigateToListings,
 }: FrontpagePageProps) => {
+  const scrollboxRef = useRef<ScrollBoxRenderable>(null);
+
+  useEffect(() => {
+    if (scrollboxRef.current) {
+      const estimatedHeightPerArticle = 8;
+      scrollboxRef.current.scrollTop = selectedArticle * estimatedHeightPerArticle;
+    }
+  }, [selectedArticle]);
+
   return (
     <box style={{ flexDirection: "row", width: "100%", height: "100%" }}>
       {/* Sidebar with sections */}
       <box style={{ width: 30, backgroundColor: themeColors.navigation.background, flexDirection: "column", padding: 1 }}>
-        <text content="📑 Sections" style={{ fg: themeColors.navigation.normal, attributes: 1 }} />
+        <text content={t('sections')} style={{ fg: themeColors.navigation.normal, attributes: 1 }} />
         {frontpageData.frontpage.map((section, index) => (
           <box key={index} style={{ marginTop: 1, backgroundColor: index === selectedSection ? themeColors.navigation.selected : undefined }}>
             <text 
@@ -32,11 +43,11 @@ export const FrontpagePage = ({
         ))}
         
         <box style={{ marginTop: 2 }}>
-          <text content="💼 Quick Actions" style={{ fg: 'white', attributes: 1 }} />
+          <text content={t('quickActions')} style={{ fg: 'white', attributes: 1 }} />
         </box>
         <box style={{ marginTop: 1, backgroundColor: selectedSection === -1 ? 'cyan' : undefined }}>
           <text 
-            content={`${selectedSection === -1 ? '▶' : ' '} View All Jobs`} 
+            content={`${selectedSection === -1 ? '▶' : ' '} ${t('viewAllJobs')}`} 
             style={{ fg: selectedSection === -1 ? 'black' : 'yellow' }} 
           />
         </box>
@@ -44,8 +55,8 @@ export const FrontpagePage = ({
       
       {/* Main article area */}
       <box style={{ flexDirection: "column", padding: 1, width: "60%" }}>
-        <text content="📰 Latest Articles" style={{ fg: 'green', attributes: 1, marginBottom: 1 }} />
-        <scrollbox style={{ height: "100%" }}>
+        <text content={t('latestArticles')} style={{ fg: 'green', attributes: 1, marginBottom: 1 }} />
+        <scrollbox ref={scrollboxRef} style={{ height: "100%" }}>
           {frontpageData.latestArticles.slice(0, 15).map((article, index) => (
             <box 
               key={article.id} 
@@ -78,7 +89,7 @@ export const FrontpagePage = ({
       
       {/* Right sidebar with jobs and events */}
       <box style={{ width: 35, backgroundColor: "darkblue", flexDirection: "column", padding: 1 }}>
-        <text content="💼 Recent Jobs" style={{ fg: 'white', attributes: 1 }} />
+        <text content={t('recentJobs')} style={{ fg: 'white', attributes: 1 }} />
         {frontpageData.jobs.slice(0, 5).map((job, index) => (
           <box key={job.id} style={{ marginTop: 1, padding: 1, border: true }}>
             <box style={{ flexDirection: "column" }}>
@@ -89,7 +100,7 @@ export const FrontpagePage = ({
           </box>
         ))}
         
-        <text content="📅 Upcoming Events" style={{ fg: 'white', attributes: 1, marginTop: 2 }} />
+        <text content={t('upcomingEvents')} style={{ fg: 'white', attributes: 1, marginTop: 2 }} />
         {frontpageData.events.upcomingEvents.slice(0, 3).map((event, index) => (
           <box key={index} style={{ marginTop: 1, padding: 1, border: true }}>
             <box style={{ flexDirection: "column" }}>
@@ -100,7 +111,7 @@ export const FrontpagePage = ({
           </box>
         ))}
         
-        <text content="💬 Recent Comments" style={{ fg: 'white', attributes: 1, marginTop: 2 }} />
+        <text content={t('recentComments')} style={{ fg: 'white', attributes: 1, marginTop: 2 }} />
         {frontpageData.newestComments.slice(0, 2).map((comment, index) => (
           <box key={index} style={{ marginTop: 1, padding: 1, border: true }}>
             <box style={{ flexDirection: "column" }}>

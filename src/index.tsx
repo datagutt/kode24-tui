@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { render, useKeyboard } from '@opentui/react';
+import { render, useKeyboard, useRenderer } from '@opentui/react';
 import { api } from './services/api.js';
 import { useNavigation } from './hooks/useNavigation.js';
 import { Layout } from './components/Layout.js';
@@ -16,14 +16,23 @@ export const App = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentArticleId, setCurrentArticleId] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
-  
+
   const { navigation, navigateToPage, goBack, updateSelection } = useNavigation();
+  const renderer = useRenderer();
 
   useKeyboard((key: any) => {
+    // Check if there's a focused renderable that can handle keyboard events
+    const focusedRenderable = renderer?.currentFocusedRenderable;
+    if (focusedRenderable && typeof (focusedRenderable as any).handleKeyPress === 'function') {
+      if ((focusedRenderable as any).handleKeyPress(key)) {
+        return; // Event was handled by the focused renderable
+      }
+    }
+
     if (key.name === 'q') {
       process.exit(0);
     }
-    
+
     if (key.name === 'escape') {
       if (showHelp) {
         setShowHelp(false);
@@ -32,7 +41,7 @@ export const App = () => {
       }
       return;
     }
-    
+
     if (key.name === 'h') {
       setShowHelp(!showHelp);
       return;

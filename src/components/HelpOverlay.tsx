@@ -1,4 +1,5 @@
 import React from 'react';
+import { t } from '../i18n/index.js';
 
 interface HelpOverlayProps {
   onClose: () => void;
@@ -16,29 +17,29 @@ export const HelpOverlay = ({ onClose }: HelpOverlayProps) => {
       flexDirection="column"
       padding={2}
     >
-      <text content="Keyboard Shortcuts" style={{ fg: 'cyan', attributes: 1 }} marginBottom={1} />
-      
+      <text content={t('keyboardShortcuts')} style={{ fg: 'cyan', attributes: 1 }} marginBottom={1} />
+
       <box flexDirection="column" gap={1}>
-        <text content="Navigation:" style={{ fg: 'yellow' }} />
-        <text content="  ↑/↓ - Navigate up/down" />
-        <text content="  ←/→ - Navigate left/right (sections)" />
-        <text content="  Enter - Select item" />
-        <text content="  Esc - Go back" />
-        
+        <text content={t('navigation')} style={{ fg: 'yellow' }} />
+        <text content={t('navUpDown')} />
+        <text content={t('navLeftRight')} />
+        <text content={t('navEnter')} />
+        <text content={t('navEsc')} />
+
         <text content="" />
-        <text content="Pages:" style={{ fg: 'yellow' }} />
-        <text content="  l - Listings" />
-        <text content="  t - Tags" />
-        <text content="  e - Events" />
-        
+        <text content={t('pages')} style={{ fg: 'yellow' }} />
+        <text content={t('pageListings')} />
+        <text content={t('pageTags')} />
+        <text content={t('pageEvents')} />
+
         <text content="" />
-        <text content="General:" style={{ fg: 'yellow' }} />
-        <text content="  h - Show/hide this help" />
-        <text content="  q - Quit application" />
+        <text content={t('general')} style={{ fg: 'yellow' }} />
+        <text content={t('helpToggle')} />
+        <text content={t('quit')} />
       </box>
-      
+
       <box marginTop={2} alignSelf="flex-end">
-        <text content="Press any key to close" style={{ fg: 'gray' }} />
+        <text content={t('pressAnyKey')} style={{ fg: 'gray' }} />
       </box>
     </box>
   );

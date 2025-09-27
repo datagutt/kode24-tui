@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Job } from '../types/index.js';
+import type { ScrollBoxRenderable } from '@opentui/core';
+import { t } from '../i18n/index.js';
 
 interface ListingsPageProps {
   initialJobs?: Job[];
@@ -12,6 +14,15 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(initialJobs);
+
+  const scrollboxRef = useRef<ScrollBoxRenderable>(null);
+
+  useEffect(() => {
+    if (scrollboxRef.current) {
+      const estimatedHeightPerJob = 10;
+      scrollboxRef.current.scrollTop = selectedJob * estimatedHeightPerJob;
+    }
+  }, [selectedJob]);
 
   useEffect(() => {
     // Filter jobs based on search query
@@ -41,7 +52,7 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
   if (loading) {
     return (
       <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
-        <text content="Loading job listings..." style={{ fg: 'blue' }} />
+        <text content={t('loadingJobs')} style={{ fg: 'blue' }} />
       </box>
     );
   }
@@ -50,32 +61,32 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
     <box style={{ flexDirection: "column", height: "100%", width: "100%", padding: 1 }}>
       {/* Header */}
       <box style={{ flexDirection: "column", marginBottom: 1 }}>
-        <text content="💼 Job Listings" style={{ fg: 'green', attributes: 1, marginBottom: 1 }} />
-        <text content={`Found ${filteredJobs.length} jobs`} style={{ fg: 'gray' }} />
+        <text content={t('jobListings')} style={{ fg: 'green', attributes: 1, marginBottom: 1 }} />
+        <text content={t('foundJobs', { count: filteredJobs.length })} style={{ fg: 'gray' }} />
       </box>
 
       {/* Search Bar */}
       {searchQuery && (
         <box style={{ border: true, marginBottom: 1, padding: 1 }}>
-          <text content="🔍 Search: " style={{ fg: 'yellow', marginRight: 1 }} />
+          <text content={t('search')} style={{ fg: 'yellow', marginRight: 1 }} />
           <text content={searchQuery} style={{ fg: 'white' }} />
         </box>
       )}
 
       {/* Job Filters */}
       <box style={{ flexDirection: "row", marginBottom: 1 }}>
-        <text content="Filters: " style={{ fg: 'cyan', marginRight: 1 }} />
-        <text content="All Types" style={{ fg: 'white', marginRight: 2 }} />
-        <text content="All Locations" style={{ fg: 'white', marginRight: 2 }} />
-        <text content="All Companies" style={{ fg: 'white' }} />
+        <text content={t('filters')} style={{ fg: 'cyan', marginRight: 1 }} />
+        <text content={t('allTypes')} style={{ fg: 'white', marginRight: 2 }} />
+        <text content={t('allLocations')} style={{ fg: 'white', marginRight: 2 }} />
+        <text content={t('allCompanies')} style={{ fg: 'white' }} />
       </box>
 
       {/* Jobs List */}
-      <scrollbox style={{ height: "100%", width: "100%" }}>
+      <scrollbox ref={scrollboxRef} style={{ height: "100%", width: "100%" }}>
         {filteredJobs.length === 0 ? (
           <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-            <text content="No jobs found" style={{ fg: 'yellow' }} />
-            <text content="Try adjusting your search or filters" style={{ fg: 'gray', marginTop: 1 }} />
+            <text content={t('noJobsFound')} style={{ fg: 'yellow' }} />
+            <text content={t('tryAdjustingSearch')} style={{ fg: 'gray', marginTop: 1 }} />
           </box>
         ) : (
           <box style={{ flexDirection: "column" }}>
@@ -131,7 +142,7 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
                 {/* Action hint */}
                 {index === selectedJob && (
                   <box style={{ marginTop: 1 }}>
-                    <text content="Press Enter to view job details" style={{ fg: 'white', attributes: 1 }} />
+                    <text content={t('pressEnter')} style={{ fg: 'white', attributes: 1 }} />
                   </box>
                 )}
               </box>
@@ -142,7 +153,7 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
 
       {/* Footer */}
       <box style={{ border: true, padding: 1, marginTop: 1 }}>
-        <text content="Navigation: ↑↓ Browse jobs | Enter View details | s Search | f Filter" style={{ fg: 'blue' }} />
+        <text content={t('navJobs')} style={{ fg: 'blue' }} />
       </box>
     </box>
   );
