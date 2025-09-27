@@ -1,8 +1,9 @@
 import React, { useRef, useEffect } from 'react';
 import type { Frontpage } from '../types/index.js';
-import { themeColors } from '../theme/colors.js';
+import { colors, themeColors } from '../theme/colors.js';
 import type { ScrollBoxRenderable } from '@opentui/core';
 import { t } from '../i18n/index.js';
+import { JobCard } from '../components/JobCard.js';
 
 interface FrontpagePageProps {
   frontpageData: Frontpage;
@@ -28,98 +29,129 @@ export const FrontpagePage = ({
     }
   }, [selectedArticle]);
 
+  const hero = frontpageData.latestArticles[selectedArticle] ?? frontpageData.latestArticles[0];
+  const focusSection = frontpageData.frontpage[selectedSection] ?? frontpageData.frontpage[0];
+  const sectionName = focusSection?.title ?? t('sections');
+  const sectionArticles = focusSection?.articles ?? [];
+  const totalArticles = frontpageData.latestArticles.length;
+  const totalJobs = frontpageData.jobs.length;
+  const totalEvents = frontpageData.events.upcomingEvents.length;
+  const heroTags = hero?.tags
+    ? hero.tags.split(',').map(tag => tag.trim()).filter(Boolean).slice(0, 2)
+    : [];
+
   return (
-    <box style={{ flexDirection: "row", width: "100%", height: "100%" }}>
-      {/* Sidebar with sections */}
-      <box style={{ width: 30, backgroundColor: themeColors.navigation.background, flexDirection: "column", padding: 1 }}>
-        <text content={t('sections')} style={{ fg: themeColors.navigation.normal, attributes: 1 }} />
-        {frontpageData.frontpage.map((section, index) => (
-          <box key={index} style={{ marginTop: 1, backgroundColor: index === selectedSection ? themeColors.navigation.selected : undefined }}>
-            <text 
-              content={`${index === selectedSection ? '▶' : ' '} ${section.title}`} 
-              style={{ fg: index === selectedSection ? themeColors.navigation.selectedText : themeColors.tag.name }} 
-            />
-          </box>
-        ))}
-        
-        <box style={{ marginTop: 2 }}>
-          <text content={t('quickActions')} style={{ fg: 'white', attributes: 1 }} />
+    <box style={{ flexDirection: "column", width: "100%", height: "100%", backgroundColor: themeColors.navigation.background }}>
+      <box style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 1, border: true, borderColor: themeColors.navigation.selected, backgroundColor: themeColors.navigation.selected }}>
+        <box style={{ flexDirection: "column" }}>
+          <text content="kode24" style={{ fg: themeColors.navigation.selectedText, attributes: 1 }} />
+          <text content={t('latestArticles')} style={{ fg: themeColors.navigation.selectedText, marginTop: 0 }} />
         </box>
-        <box style={{ marginTop: 1, backgroundColor: selectedSection === -1 ? 'cyan' : undefined }}>
-          <text 
-            content={`${selectedSection === -1 ? '▶' : ' '} ${t('viewAllJobs')}`} 
-            style={{ fg: selectedSection === -1 ? 'black' : 'yellow' }} 
-          />
+        <box style={{ flexDirection: "row" }}>
+          <text content={`📰 ${totalArticles} ${t('articles')}`} style={{ fg: themeColors.navigation.selectedText, marginRight: 2 }} />
+          <text content={`💼 ${totalJobs} ${t('jobListings')}`} style={{ fg: themeColors.navigation.selectedText, marginRight: 2 }} />
+          <text content={`📅 ${totalEvents} ${t('upcomingEvents')}`} style={{ fg: themeColors.navigation.selectedText }} />
         </box>
       </box>
-      
-      {/* Main article area */}
-      <box style={{ flexDirection: "column", padding: 1, width: "60%" }}>
-        <text content={t('latestArticles')} style={{ fg: 'green', attributes: 1, marginBottom: 1 }} />
-        <scrollbox ref={scrollboxRef} style={{ height: "100%" }}>
-          {frontpageData.latestArticles.slice(0, 15).map((article, index) => (
-            <box 
-              key={article.id} 
-              style={{
-                marginBottom: 1,
-                padding: 1,
-                border: true,
-                backgroundColor: index === selectedArticle ? 'blue' : undefined
-              }}
-            >
-              <box style={{ flexDirection: "column" }}>
-                <text 
-                  content={article.title} 
-                  style={{ fg: index === selectedArticle ? 'white' : 'white', attributes: 1 }} 
-                />
-                <text 
-                  content={`${article.byline.name} - ${new Date(article.published).toLocaleDateString()}`} 
-                  style={{ fg: 'gray' }} 
-                />
-                <text content={article.subtitle} style={{ fg: 'cyan' }} />
-                <text 
-                  content={`❤️ ${article.reactions.reactions_count} reactions | 💬 ${article.reactions.comments_count} comments`} 
-                  style={{ fg: 'yellow' }} 
-                />
+
+      <box style={{ flexDirection: "row", width: "100%", height: "100%", padding: 1 }}>
+        <box style={{ width: 32, backgroundColor: themeColors.navigation.background, border: true, borderColor: themeColors.navigation.selected, flexDirection: "column", padding: 1 }}>
+          <text content={t('sections')} style={{ fg: themeColors.navigation.normal, attributes: 1 }} />
+          <scrollbox style={{ height: "70%", marginTop: 1 }}>
+            {frontpageData.frontpage.map((section, index) => {
+              const isSelected = index === selectedSection;
+              const marker = isSelected ? '▶' : ' ';
+              const fg = isSelected ? themeColors.navigation.selectedText : themeColors.tag.name;
+              const bg = isSelected ? themeColors.navigation.selected : undefined;
+              return (
+                <box key={section.title ?? `${index}`} style={{ marginBottom: 1, backgroundColor: bg, padding: 1, border: isSelected }}>
+                  <text content={`${marker} ${section.title}`} style={{ fg }} />
+                  {section.description && (
+                    <text content={section.description} style={{ fg: themeColors.navigation.normal, marginTop: 0 }} />
+                  )}
+                </box>
+              );
+            })}
+          </scrollbox>
+
+          <box style={{ marginTop: 1, padding: 1, border: true, borderColor: themeColors.navigation.selected }}>
+            <text content={t('quickActions')} style={{ fg: themeColors.navigation.normal, attributes: 1 }} />
+            <text content={`↵ ${t('openSelected')}`} style={{ fg: themeColors.navigation.normal, marginTop: 1 }} />
+            <text content={`L ${t('viewAllJobs')}`} style={{ fg: themeColors.navigation.normal, marginTop: 1 }} />
+            <text content={`T ${t('categoriesTags')}`} style={{ fg: themeColors.navigation.normal, marginTop: 1 }} />
+          </box>
+        </box>
+
+        <box style={{ flexDirection: "column", width: "60%", marginLeft: 1, marginRight: 1 }}>
+          {hero && (
+            <box style={{ border: true, borderColor: themeColors.navigation.selected, padding: 2, marginBottom: 1, backgroundColor: colors.surface.raised, flexDirection: "column" }}>
+              <text content={sectionName.toUpperCase()} style={{ fg: themeColors.navigation.selectedText, attributes: 1 }} />
+              <text content={hero.title} style={{ fg: themeColors.navigation.selectedText, attributes: 1, marginTop: 1 }} />
+              {hero.subtitle && (
+                <text content={hero.subtitle} style={{ fg: themeColors.tag.name, marginTop: 1 }} />
+              )}
+              <text content={`${hero.byline.name} • ${new Date(hero.published).toLocaleString()}`} style={{ fg: themeColors.navigation.normal, marginTop: 1 }} />
+              <box style={{ flexDirection: "row", marginTop: 1 }}>
+                <text content={`🔥 ${hero.reactions.reactions_count}`} style={{ fg: themeColors.navigation.selectedText, marginRight: 2 }} />
+                <text content={`💬 ${hero.reactions.comments_count}`} style={{ fg: themeColors.navigation.selectedText, marginRight: 2 }} />
+                {heroTags.length > 0 ? (
+                  <text content={`🏷️ ${heroTags.join(', ')}`} style={{ fg: themeColors.navigation.selectedText }} />
+                ) : null}
               </box>
+              <text content={t('pressEnter')} style={{ fg: themeColors.navigation.selectedText, marginTop: 1 }} />
+            </box>
+          )}
+
+          <scrollbox ref={scrollboxRef} style={{ height: "100%", border: true, borderColor: themeColors.navigation.selected, padding: 1 }}>
+            {frontpageData.latestArticles.map((article, index) => {
+              const isSelected = index === selectedArticle;
+              const bg = isSelected ? themeColors.navigation.selected : undefined;
+              const fg = isSelected ? themeColors.navigation.selectedText : themeColors.navigation.normal;
+              return (
+                <box key={article.id} style={{ flexDirection: "column", padding: 1, backgroundColor: bg, border: true, borderColor: themeColors.navigation.selected, marginBottom: 1 }}>
+                  <text content={`${index + 1}. ${article.title}`} style={{ fg: fg, attributes: isSelected ? 1 : 0 }} />
+                  <text content={`${article.byline.name} • ${new Date(article.published).toLocaleDateString()}`} style={{ fg: themeColors.navigation.normal, marginTop: 0 }} />
+                  {article.subtitle && (
+                    <text content={article.subtitle} style={{ fg: themeColors.tag.name, marginTop: 0 }} />
+                  )}
+                  <box style={{ flexDirection: "row", marginTop: 0 }}>
+                    <text content={`❤️ ${article.reactions.reactions_count}`} style={{ fg: themeColors.navigation.normal, marginRight: 2 }} />
+                    <text content={`💬 ${article.reactions.comments_count}`} style={{ fg: themeColors.navigation.normal }} />
+                  </box>
+                </box>
+              );
+            })}
+          </scrollbox>
+        </box>
+
+        <box style={{ width: 32, border: true, borderColor: themeColors.navigation.selected, backgroundColor: colors.surface.raised, flexDirection: "column", padding: 1 }}>
+          <text content={t('recentJobs')} style={{ fg: themeColors.navigation.selectedText, attributes: 1 }} />
+          {frontpageData.jobs.slice(0, 4).map(job => (
+            <JobCard key={job.id} job={job} />
+          ))}
+
+          <text content={t('upcomingEvents')} style={{ fg: themeColors.navigation.selectedText, attributes: 1, marginTop: 2 }} />
+          {frontpageData.events.upcomingEvents.slice(0, 3).map(event => (
+            <box key={event.name} style={{ border: true, borderColor: themeColors.navigation.selected, marginTop: 1, padding: 1, backgroundColor: colors.surface.card }}>
+              <text content={event.name} style={{ fg: themeColors.navigation.selectedText }} />
+              <text content={event.arrangedBy} style={{ fg: themeColors.navigation.normal }} />
+              <text content={event.startDateFormatted} style={{ fg: themeColors.navigation.normal }} />
             </box>
           ))}
-        </scrollbox>
-      </box>
-      
-      {/* Right sidebar with jobs and events */}
-      <box style={{ width: 35, backgroundColor: "darkblue", flexDirection: "column", padding: 1 }}>
-        <text content={t('recentJobs')} style={{ fg: 'white', attributes: 1 }} />
-        {frontpageData.jobs.slice(0, 5).map((job, index) => (
-          <box key={job.id} style={{ marginTop: 1, padding: 1, border: true }}>
-            <box style={{ flexDirection: "column" }}>
-              <text content={job.title} style={{ fg: 'white' }} />
-              <text content={job.company.name} style={{ fg: 'green' }} />
-              <text content={job.type.toUpperCase()} style={{ fg: 'yellow' }} />
+
+          <text content={t('recentComments')} style={{ fg: themeColors.navigation.selectedText, attributes: 1, marginTop: 2 }} />
+          {frontpageData.newestComments.slice(0, 3).map(comment => (
+            <box key={comment.page_identifier} style={{ border: true, borderColor: themeColors.navigation.selected, marginTop: 1, padding: 1, backgroundColor: colors.surface.card }}>
+              <text content={comment.user.name} style={{ fg: themeColors.navigation.selectedText }} />
+              <text content={comment.bodySnippet.slice(0, 60)} style={{ fg: themeColors.navigation.normal }} />
             </box>
+          ))}
+
+          <box style={{ marginTop: 2 }}>
+            <text content={t('viewAllJobs')} style={{ fg: themeColors.navigation.selectedText, attributes: 1 }} />
+            <text content={t('pressEnter')} style={{ fg: themeColors.navigation.selectedText, marginTop: 0 }} />
           </box>
-        ))}
-        
-        <text content={t('upcomingEvents')} style={{ fg: 'white', attributes: 1, marginTop: 2 }} />
-        {frontpageData.events.upcomingEvents.slice(0, 3).map((event, index) => (
-          <box key={index} style={{ marginTop: 1, padding: 1, border: true }}>
-            <box style={{ flexDirection: "column" }}>
-              <text content={event.name} style={{ fg: 'white' }} />
-              <text content={event.arrangedBy} style={{ fg: 'green' }} />
-              <text content={event.startDateFormatted} style={{ fg: 'yellow' }} />
-            </box>
-          </box>
-        ))}
-        
-        <text content={t('recentComments')} style={{ fg: 'white', attributes: 1, marginTop: 2 }} />
-        {frontpageData.newestComments.slice(0, 2).map((comment, index) => (
-          <box key={index} style={{ marginTop: 1, padding: 1, border: true }}>
-            <box style={{ flexDirection: "column" }}>
-              <text content={comment.user.name} style={{ fg: 'green' }} />
-              <text content={comment.bodySnippet.slice(0, 50) + '...'} style={{ fg: 'white' }} />
-            </box>
-          </box>
-        ))}
+        </box>
       </box>
     </box>
   );

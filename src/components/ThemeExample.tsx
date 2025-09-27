@@ -18,8 +18,8 @@ export const ThemeExample = () => {
       <text content="This is a subtitle" style={theme.styles.subtitle} />
       
       {/* Direct color access */}
-      <text content="Direct color: Primary Blue" style={{ fg: theme.colors.primary.blue }} />
-      <text content="Direct color: Brand Orange" style={{ fg: theme.colors.brand.orange }} />
+      <text content="Direct color: Background" style={{ fg: theme.colors.background.base }} />
+      <text content="Direct color: Accent Pink" style={{ fg: theme.colors.accent.pink }} />
       
       {/* Semantic theme colors */}
       <text content="Article title color" style={{ fg: theme.article.title }} />
@@ -47,13 +47,13 @@ export const ThemeExample = () => {
       
       {/* Using color utilities */}
       <text 
-        content={`Dynamic color: ${theme.get('brand.purple')}`} 
-        style={{ fg: theme.get('brand.purple') }} 
+        content={`Dynamic color: ${theme.get('accent.purple')}`}
+        style={{ fg: theme.get('accent.purple') }}
       />
       
       {/* Check if color exists */}
       <text 
-        content={`Color 'primary.blue' exists: ${theme.exists('primary.blue')}`} 
+        content={`Color 'accent.purple' exists: ${theme.exists('accent.purple')}`}
         style={theme.styles.muted} 
       />
     </box>

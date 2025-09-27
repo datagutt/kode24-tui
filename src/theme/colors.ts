@@ -1,196 +1,167 @@
 /**
- * Centralized theme colors for kode24-tui
- * 
- * This file defines all colors used throughout the application
- * to ensure consistency and easy theme management.
+ * Centralized theme colors for kode24-tui.
+ * Values are derived from kode24-assets SCSS variables to keep the TUI in sync
+ * with the real kode24 visual language.
  */
 
+const palette = {
+  background: '#131316', // --v2-background
+  backgroundHighlight: '#24262e', // --v2-background-highlight
+  backgroundAlt: '#1b1c22', // --v2-background-always-dark
+  card: '#23252f', // --v2-card-background
+  cardRaised: '#353746', // --v2-card-background-highlight
+  cardLifted: '#464a5d', // --v2-card-background-highlight-2
+  headline: '#f8f8f2', // --v2-card-headline-color
+  paragraph: '#a1a3aa', // --v2-card-paragraph-color
+  label: '#201f29', // --v2-card-label-background
+  teal: '#94ffff', // --v2-label-color-teal
+  tealDark: '#00cccc',
+  pinkLight: '#ff33a3', // --v2-label-color-pink-lighter
+  pink: '#e92b93', // --v2-label-color-pink & buttons
+  pinkDark: '#cc0070', // --v2-label-color-pink-darker
+  purple: '#b625b6', // --v2-label-color-purple
+  purpleDark: '#cc00cc', // --v2-label-color-purple-darker
+  lime: '#8aff80', // --v2-label-color-blue (green tone)
+  limeDark: '#0d9900', // --v2-label-color-blue-darker
+  yellow: '#ffff80', // --v2-label-color-yellow
+  yellowDark: '#cccc00', // --v2-label-color-yellow-darker
+  orange: '#ffca80', // --v2-label-color-orange
+  orangeDark: '#cc7700', // --v2-label-color-orange-darker
+  flame: '#ff3300', // --v2-flame-red
+};
+
 export const colors = {
-  // Primary colors
-  primary: {
-    blue: '#0066cc',
-    darkBlue: '#004499',
-    lightBlue: '#3399ff',
-    cyan: '#00ffff',
-  },
-
-  // Status colors
-  status: {
-    success: '#00cc00',
-    warning: '#ffcc00',
-    error: '#cc0000',
-    info: '#0099cc',
-  },
-
-  // Text colors
-  text: {
-    primary: '#ffffff',
-    secondary: '#cccccc',
-    muted: '#999999',
-    inverse: '#000000',
-    link: '#0099ff',
-  },
-
-  // Background colors
+  palette,
   background: {
-    primary: '#000000',
-    secondary: '#1a1a1a',
-    accent: '#333333',
-    highlight: '#0066cc',
-    selected: '#004499',
-    hover: '#2a2a2a',
+    base: palette.background,
+    highlight: palette.backgroundHighlight,
+    alt: palette.backgroundAlt,
   },
-
-  // UI Component colors
-  ui: {
-    border: '#666666',
-    separator: '#444444',
-    shadow: '#111111',
-    disabled: '#666666',
+  surface: {
+    card: palette.card,
+    raised: palette.cardRaised,
+    lifted: palette.cardLifted,
+    label: palette.label,
   },
-
-  // Brand colors (kode24 specific)
-  brand: {
-    orange: '#ff6600',
-    green: '#00cc66',
-    purple: '#9966cc',
-    yellow: '#ffcc00',
+  text: {
+    primary: palette.headline,
+    secondary: palette.paragraph,
+    muted: palette.paragraph,
+    inverse: palette.background,
+    accent: palette.teal,
   },
-
-  // Content type colors
-  content: {
-    article: '#ffffff',
-    job: '#00cc66',
-    event: '#ff6600',
-    tag: '#9966cc',
-    comment: '#00ccff',
+  accent: {
+    pink: palette.pink,
+    pinkLight: palette.pinkLight,
+    pinkDark: palette.pinkDark,
+    purple: palette.purple,
+    purpleDark: palette.purpleDark,
+    teal: palette.teal,
+    lime: palette.lime,
+    yellow: palette.yellow,
+    orange: palette.orange,
+    flame: palette.flame,
   },
-
-  // Semantic colors for different content
-  semantic: {
-    reactions: '#ff3366',
-    comments: '#0099ff',
-    views: '#00cc66',
-    premium: '#ffcc00',
-    focus: '#ff6600',
-    basis: '#cccccc',
+  status: {
+    success: palette.lime,
+    warning: palette.orange,
+    error: palette.pink,
+    info: palette.teal,
+  },
+  border: {
+    subtle: palette.cardRaised,
+    strong: palette.cardLifted,
   },
 } as const;
 
-// Color aliases for commonly used combinations
 export const themeColors = {
-  // Header
   header: {
-    background: colors.primary.blue,
-    text: colors.text.primary,
-    accent: colors.primary.cyan,
+    background: palette.backgroundHighlight,
+    text: palette.headline,
+    accent: palette.teal,
   },
-
-  // Footer
   footer: {
-    background: colors.ui.separator,
-    text: colors.text.primary,
+    background: palette.backgroundAlt,
+    text: palette.paragraph,
   },
-
-  // Navigation
   navigation: {
-    selected: colors.primary.blue,
-    selectedText: colors.text.primary,
-    normal: colors.text.secondary,
-    background: colors.background.secondary,
+    background: palette.background,
+    selected: palette.cardRaised,
+    selectedText: palette.headline,
+    normal: palette.paragraph,
   },
-
-  // Articles
   article: {
-    title: colors.text.primary,
-    subtitle: colors.primary.cyan,
-    author: colors.text.muted,
-    date: colors.text.muted,
-    reactions: colors.semantic.reactions,
-    comments: colors.semantic.comments,
-    views: colors.semantic.views,
+    title: palette.headline,
+    subtitle: palette.teal,
+    author: palette.paragraph,
+    date: palette.paragraph,
+    reactions: palette.pink,
+    comments: palette.teal,
+    views: palette.lime,
   },
-
-  // Jobs
   job: {
-    title: colors.text.primary,
-    company: colors.content.job,
-    type: colors.brand.yellow,
-    location: colors.primary.cyan,
-    description: colors.text.muted,
-    premium: colors.semantic.premium,
+    title: palette.headline,
+    company: palette.teal,
+    type: palette.yellow,
+    location: palette.orange,
+    description: palette.paragraph,
+    premium: palette.orange,
   },
-
-  // Tags
   tag: {
-    name: colors.primary.cyan,
-    description: colors.text.muted,
-    count: colors.brand.yellow,
-    selected: colors.primary.blue,
+    name: palette.teal,
+    description: palette.paragraph,
+    count: palette.yellow,
+    selected: palette.cardRaised,
   },
-
-  // Status indicators
-  loading: colors.primary.blue,
-  error: colors.status.error,
-  success: colors.status.success,
-  warning: colors.status.warning,
-
-  // Interactive elements
+  status: {
+    loading: palette.teal,
+    error: palette.pink,
+    success: palette.lime,
+    warning: palette.orange,
+  },
   button: {
-    primary: colors.primary.blue,
-    primaryText: colors.text.primary,
-    secondary: colors.background.accent,
-    secondaryText: colors.text.secondary,
+    primary: palette.pink,
+    primaryText: palette.headline,
+    secondary: palette.cardRaised,
+    secondaryText: palette.headline,
   },
 } as const;
 
-// Helper functions for color management
 export const colorUtils = {
-  /**
-   * Get a color value by path (e.g., 'primary.blue')
-   */
   get: (path: string): string => {
     const keys = path.split('.');
     let value: any = colors;
-    
+
     for (const key of keys) {
       value = value[key];
       if (value === undefined) {
         console.warn(`Color path '${path}' not found`);
-        return colors.text.primary; // fallback
+        return palette.headline;
       }
     }
-    
+
     return value;
   },
-
-  /**
-   * Check if a color exists
-   */
   exists: (path: string): boolean => {
     const keys = path.split('.');
     let value: any = colors;
-    
+
     for (const key of keys) {
       value = value[key];
       if (value === undefined) {
         return false;
       }
     }
-    
+
     return typeof value === 'string';
   },
-
-  /**
-   * Get all available color paths
-   */
   getPaths: (): string[] => {
     const paths: string[] = [];
-    
+
     const traverse = (obj: any, prefix = ''): void => {
       for (const [key, value] of Object.entries(obj)) {
         const path = prefix ? `${prefix}.${key}` : key;
-        
+
         if (typeof value === 'string') {
           paths.push(path);
         } else if (typeof value === 'object' && value !== null) {
@@ -198,41 +169,14 @@ export const colorUtils = {
         }
       }
     };
-    
+
     traverse(colors);
     return paths;
   },
 };
 
-// Type definitions for better TypeScript support
-export type ColorPath = 
-  | 'primary.blue'
-  | 'primary.darkBlue'
-  | 'primary.lightBlue'
-  | 'primary.cyan'
-  | 'status.success'
-  | 'status.warning'
-  | 'status.error'
-  | 'status.info'
-  | 'text.primary'
-  | 'text.secondary'
-  | 'text.muted'
-  | 'text.inverse'
-  | 'text.link'
-  | 'background.primary'
-  | 'background.secondary'
-  | 'background.accent'
-  | 'background.highlight'
-  | 'background.selected'
-  | 'background.hover'
-  | 'brand.orange'
-  | 'brand.green'
-  | 'brand.purple'
-  | 'brand.yellow';
-
 export type ThemeColorKey = keyof typeof themeColors;
 
-// Default export for convenience
 export default {
   colors,
   themeColors,

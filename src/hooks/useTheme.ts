@@ -7,11 +7,11 @@ import { colors, themeColors, colorUtils } from '../theme/colors.js';
  * const theme = useTheme();
  * 
  * // Use theme colors
- * style={{ fg: theme.colors.primary.blue }}
+ * style={{ fg: theme.colors.text.primary }}
  * style={{ fg: theme.article.title }}
  * 
  * // Use color utilities
- * const customColor = theme.get('brand.orange');
+ * const customColor = theme.get('accent.pink');
  */
 export const useTheme = () => {
   return {
@@ -32,18 +32,18 @@ export const useTheme = () => {
       primaryText: themeColors.article.title,
       secondaryText: themeColors.article.author,
       mutedText: themeColors.article.date,
-      linkText: colors.text.link,
+      linkText: colors.text.accent,
       
       // Background colors
-      selectedBg: colors.background.selected,
-      hoverBg: colors.background.hover,
-      accentBg: colors.background.accent,
+      selectedBg: themeColors.navigation.selected,
+      hoverBg: colors.surface.raised,
+      accentBg: colors.surface.lifted,
       
       // Status colors
-      loadingColor: themeColors.loading,
-      errorColor: themeColors.error,
-      successColor: themeColors.success,
-      warningColor: themeColors.warning,
+      loadingColor: themeColors.status.loading,
+      errorColor: themeColors.status.error,
+      successColor: themeColors.status.success,
+      warningColor: themeColors.status.warning,
       
       // Interactive colors
       primaryButton: themeColors.button.primary,
@@ -59,15 +59,15 @@ export const useTheme = () => {
       muted: { fg: colors.text.muted },
       
       // Common box styles
-      selected: { backgroundColor: colors.background.selected },
+      selected: { backgroundColor: themeColors.navigation.selected },
       bordered: { border: true },
       padded: { padding: 1 },
-      
+
       // Status styles
-      loading: { fg: themeColors.loading },
-      error: { fg: themeColors.error },
-      success: { fg: themeColors.success },
-      warning: { fg: themeColors.warning },
+      loading: { fg: themeColors.status.loading },
+      error: { fg: themeColors.status.error },
+      success: { fg: themeColors.status.success },
+      warning: { fg: themeColors.status.warning },
     }
   };
 };

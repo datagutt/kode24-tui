@@ -48,108 +48,130 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
 
   if (loading) {
     return (
-      <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
-        <text content={t('loadingArticle')} style={theme.styles.loading} />
+      <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%", backgroundColor: theme.colors.background.base }}>
+        <text content={t('loadingArticle')} style={{ fg: theme.status.loading }} />
       </box>
     );
   }
 
   if (error) {
     return (
-      <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
-        <text content={`Error: ${error}`} style={{ fg: 'red' }} />
-        <text content={t('pressEscToGoBack')} style={{ fg: 'gray', marginTop: 1 }} />
+      <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%", backgroundColor: theme.colors.background.base }}>
+        <text content={t('articleLoadFailed')} style={{ fg: theme.status.error }} />
+        <text content={error} style={{ fg: theme.colors.text.muted, marginTop: 1 }} />
+        <text content={t('pressEscToGoBack')} style={{ fg: theme.colors.text.muted, marginTop: 1 }} />
       </box>
     );
   }
 
   if (!article || !article.page) {
     return (
-      <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
-        <text content={t('articleNotFound')} style={{ fg: 'yellow' }} />
-        <text content={t('pressEscToGoBack')} style={{ fg: 'gray', marginTop: 1 }} />
+      <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%", backgroundColor: theme.colors.background.base }}>
+        <text content={t('articleNotFound')} style={{ fg: theme.status.warning }} />
+        <text content={t('pressEscToGoBack')} style={{ fg: theme.colors.text.muted, marginTop: 1 }} />
       </box>
     );
   }
 
-  // Check if essential data is missing
   if (!article.page.fields?.title && !article.page.fields?.bodytext) {
     return (
-      <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
-        <text content={t('articleContentNotLoaded')} style={{ fg: 'red' }} />
-        <text content={t('missingTitleAndContent')} style={{ fg: 'gray', marginTop: 1 }} />
-        <text content={t('pressEscToGoBack')} style={{ fg: 'gray', marginTop: 1 }} />
+      <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%", backgroundColor: theme.colors.background.base }}>
+        <text content={t('articleContentNotLoaded')} style={{ fg: theme.status.error }} />
+        <text content={t('missingTitleAndContent')} style={{ fg: theme.colors.text.muted, marginTop: 1 }} />
+        <text content={t('pressEscToGoBack')} style={{ fg: theme.colors.text.muted, marginTop: 1 }} />
       </box>
     );
   }
 
+  const publishedTimestamp = article.page.fields?.published ? Number(article.page.fields.published) * 1000 : undefined;
+  const publishedDate = publishedTimestamp ? new Date(publishedTimestamp) : undefined;
+  const readTime = article.page.fields?.readTime ?? article.page.fields?.stats_read_time;
+  const wordCount = article.page.fields?.stats_word_count;
+  const charCount = article.page.fields?.stats_char_count;
+  const tags = article.page.fields?.tags ? article.page.fields.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
+  const shareUrl = article.page.fields?.published_url ? `https://www.kode24.no${article.page.fields.published_url}` : undefined;
+
   return (
-    <box style={{ flexDirection: "column", height: "100%", width: "100%", padding: 2 }}>
-      {/* Article Header */}
-      <box style={{ flexDirection: "column", marginBottom: 2, border: true, paddingBottom: 1 }}>
-        {article.page.fields?.title ? (
-          <text content={article.page.fields.title} style={{...theme.styles.title, marginBottom: 1}} />
-        ) : (
-          <text content={t('articleTitleUnavailable')} style={{ fg: 'red', marginBottom: 1 }} />
-        )}
-        
-        <text 
-          content={`Article ID: ${article.page.id} - ${article.page.fields?.published ? new Date(parseInt(article.page.fields.published) * 1000).toLocaleDateString() : 'Date not available'}`} 
-          style={theme.styles.muted} 
-        />
-        
-        {article.page.fields?.subtitle && (
-          <text content={article.page.fields.subtitle} style={{...theme.styles.subtitle, marginTop: 1}} />
-        )}
-        
-        <box style={{ flexDirection: "row", marginTop: 1 }}>
-          {article.page.fields?.readTime && (
-            <text content={`📖 ${article.page.fields.readTime} min read`} style={{ fg: 'green', marginRight: 2 }} />
+    <box style={{ flexDirection: "row", height: "100%", width: "100%", padding: 1, backgroundColor: theme.colors.background.base }}>
+      <box style={{ flexDirection: "column", width: "65%", marginRight: 1 }}>
+        <box style={{ flexDirection: "column", border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 2 }}>
+          <text content={article.page.fields?.title ?? t('articleTitleUnavailable')} style={{ fg: theme.article.title, attributes: 1 }} />
+          {article.page.fields?.subtitle && (
+            <text content={article.page.fields.subtitle} style={{ fg: theme.article.subtitle, marginTop: 1 }} />
           )}
-          <text content={`📄 ${article.page.type}`} style={{ fg: 'blue', marginRight: 2 }} />
-          <text content={`📊 ${article.page.status}`} style={{ fg: 'yellow' }} />
+          <box style={{ flexDirection: "row", marginTop: 1 }}>
+            <text content={`👤 ${article.page.fields?.created_by_name ?? article.page.fields?.created_by ?? article.page.fields?.lockUser ?? ''}`} style={{ fg: theme.article.author, marginRight: 2 }} />
+            {publishedDate && (
+              <text content={`📅 ${publishedDate.toLocaleDateString()}`} style={{ fg: theme.article.date, marginRight: 2 }} />
+            )}
+            {readTime && (
+              <text content={`⏱️ ${readTime} ${t('minutes')}`} style={{ fg: theme.article.date }} />
+            )}
+          </box>
+          <box style={{ flexDirection: "row", marginTop: 1 }}>
+            <text content={`📄 ${article.page.type}`} style={{ fg: theme.article.date, marginRight: 2 }} />
+            <text content={`📊 ${article.page.status}`} style={{ fg: theme.article.date }} />
+          </box>
+          {tags.length > 0 && (
+            <box style={{ flexDirection: "row", marginTop: 1 }}>
+              <text content="🏷️" style={{ fg: theme.tag.name, marginRight: 1 }} />
+              <text content={tags.join(', ')} style={{ fg: theme.tag.name }} />
+            </box>
+          )}
         </box>
-      </box>
 
-      {/* Article Content */}
-      <scrollbox ref={scrollboxRef} style={{ height: "100%", width: "100%" }}>
-        <box style={{ flexDirection: "column", padding: 1 }}>
-          <text content={t('articleContent')} style={{ fg: 'green', attributes: 1, marginBottom: 1 }} />
-
-          {/* Article body/content */}
+        <scrollbox ref={scrollboxRef} style={{ height: "100%", border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.raised, padding: 2, marginTop: 1 }}>
+          <text content={t('articleContent')} style={{ fg: theme.article.subtitle, attributes: 1, marginBottom: 1 }} />
           {article.page.fields?.bodytext ? (
-            <box style={{ flexDirection: "column", marginBottom: 2 }}>
+            <box style={{ flexDirection: "column" }}>
               {convertHTMLToOpenTUI(article.page.fields.bodytext)}
             </box>
           ) : (
-            <box style={{ flexDirection: "column", marginBottom: 2 }}>
-              <text content={t('articleContentUnavailable')} style={{ fg: 'yellow', marginBottom: 1 }} />
-              <text content={t('paywallOrFormatting')} style={{ fg: 'gray' }} />
+            <box style={{ flexDirection: "column" }}>
+              <text content={t('articleContentUnavailable')} style={{ fg: theme.status.warning, marginBottom: 1 }} />
+              <text content={t('paywallOrFormatting')} style={{ fg: theme.colors.text.muted }} />
             </box>
           )}
-          
-          {/* Article URL */}
-          {article.page.fields?.published_url && (
-            <box style={{ flexDirection: "column", marginTop: 2 }}>
-              <text content={t('articleUrl')} style={{ fg: 'cyan', attributes: 1, marginBottom: 1 }} />
-              <text content={`https://www.kode24.no${article.page.fields.published_url}`} style={{ fg: 'blue' }} />
-            </box>
-          )}
+        </scrollbox>
+      </box>
 
-          {/* Development info */}
-          <box style={{ flexDirection: "column", marginTop: 2, border: true, padding: 1 }}>
-            <text content={t('developmentInfo')} style={{ fg: 'yellow', attributes: 1, marginBottom: 1 }} />
-            <text content={`Article ID: ${articleId}`} style={{ fg: 'cyan', marginBottom: 1 }} />
-            <text content={`API Response Keys: ${Object.keys(article).join(', ')}`} style={{ fg: 'cyan', marginBottom: 1 }} />
-            <text content={`Type: ${article.page.type}`} style={{ fg: 'cyan', marginBottom: 1 }} />
-            {article.page.fields?.published_url && (
-              <text content={`URL: ${article.page.fields.published_url}`} style={{ fg: 'cyan' }} />
-            )}
-          </box>
+      <box style={{ flexDirection: "column", width: "35%" }}>
+        <box style={{ border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 1 }}>
+          <text content={t('articleOverview')} style={{ fg: theme.article.title, attributes: 1 }} />
+          <text content={`${t('articleIdLabel')} ${article.page.id}`} style={{ fg: theme.colors.text.secondary, marginTop: 1 }} />
+          <text content={`${t('articleTypeLabel')} ${article.page.type}`} style={{ fg: theme.colors.text.secondary }} />
+          <text content={`${t('articleStatusLabel')} ${article.page.status}`} style={{ fg: theme.colors.text.secondary }} />
+          {shareUrl && (
+            <text content={`${t('articleUrl')} ${shareUrl}`} style={{ fg: theme.colors.text.accent, marginTop: 1 }} />
+          )}
         </box>
-      </scrollbox>
 
+        <box style={{ border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 1, marginTop: 1 }}>
+          <text content={t('readingStats')} style={{ fg: theme.article.title, attributes: 1 }} />
+          {readTime && (
+            <text content={`${t('readTimeLabel')} ${readTime} ${t('minutes')}`} style={{ fg: theme.colors.text.secondary, marginTop: 1 }} />
+          )}
+          {wordCount && (
+            <text content={`${t('wordCountLabel')} ${wordCount}`} style={{ fg: theme.colors.text.secondary }} />
+          )}
+          {charCount && (
+            <text content={`${t('charCountLabel')} ${charCount}`} style={{ fg: theme.colors.text.secondary }} />
+          )}
+        </box>
 
+        <box style={{ border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 1, marginTop: 1 }}>
+          <text content={t('actions')} style={{ fg: theme.article.title, attributes: 1 }} />
+          <text content={`↵ ${t('returnToFrontpage')}`} style={{ fg: theme.colors.text.muted, marginTop: 1 }} />
+          <text content={`Esc ${t('pressEscToGoBack')}`} style={{ fg: theme.colors.text.muted }} />
+        </box>
+
+        <box style={{ border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 1, marginTop: 1 }}>
+          <text content={t('developmentInfo')} style={{ fg: theme.article.title, attributes: 1 }} />
+          <text content={`API keys: ${Object.keys(article).join(', ')}`} style={{ fg: theme.colors.text.secondary, marginTop: 1 }} />
+          <text content={`${t('articleTemplateLabel')} ${article.page.fields?.page_template_alias ?? '—'}`} style={{ fg: theme.colors.text.secondary }} />
+          <text content={`${t('articleSiteLabel')} ${article.page.site_id}`} style={{ fg: theme.colors.text.secondary }} />
+        </box>
+      </box>
     </box>
   );
 };

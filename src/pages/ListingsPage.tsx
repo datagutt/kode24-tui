@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import type { Job } from '../types/index.js';
 import type { ScrollBoxRenderable } from '@opentui/core';
 import { t } from '../i18n/index.js';
+import { useTheme } from '../hooks/useTheme.js';
+import { JobCard } from '../components/JobCard.js';
 
 interface ListingsPageProps {
   initialJobs?: Job[];
@@ -16,6 +18,7 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(initialJobs);
 
   const scrollboxRef = useRef<ScrollBoxRenderable>(null);
+  const theme = useTheme();
 
   useEffect(() => {
     if (scrollboxRef.current) {
@@ -91,61 +94,12 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
         ) : (
           <box style={{ flexDirection: "column" }}>
             {filteredJobs.map((job, index) => (
-              <box 
-                key={job.id} 
-                style={{
-                  border: true,
-                  marginBottom: 1,
-                  padding: 1,
-                  backgroundColor: index === selectedJob ? 'blue' : undefined
-                }}
-              >
-                <box style={{ flexDirection: "row", width: "100%" }}>
-                  {/* Left: Job Details */}
-                  <box style={{ flexDirection: "column", width: "70%" }}>
-                    <text 
-                      content={job.title} 
-                      style={{ fg: index === selectedJob ? 'white' : 'white', attributes: 1 }} 
-                    />
-                    <text 
-                      content={`🏢 ${job.company.name}`} 
-                      style={{ fg: 'green', marginTop: 1 }} 
-                    />
-                    {job.applicationTitle && (
-                      <text 
-                        content={job.applicationTitle} 
-                        style={{ fg: 'gray', marginTop: 1 }} 
-                      />
-                    )}
-                  </box>
-
-                  {/* Right: Job Meta */}
-                  <box style={{ flexDirection: "column", width: "30%", alignItems: "flex-end" }}>
-                    <text 
-                      content={job.type.toUpperCase()} 
-                      style={{ fg: 'yellow', marginBottom: 1 }} 
-                    />
-
-                    <text 
-                      content={`📅 Posted ${new Date(job.published).toLocaleDateString()}`} 
-                      style={{ fg: 'blue' }} 
-                    />
-                  </box>
-                </box>
-
-                {/* Job type tag */}
-                <box style={{ flexDirection: "row", marginTop: 1 }}>
-                  <text content="🏷️ " style={{ fg: 'cyan', marginRight: 1 }} />
-                  <text content={job.type} style={{ fg: 'cyan' }} />
-                </box>
-
-                {/* Action hint */}
-                {index === selectedJob && (
-                  <box style={{ marginTop: 1 }}>
-                    <text content={t('pressEnter')} style={{ fg: 'white', attributes: 1 }} />
-                  </box>
-                )}
-              </box>
+              <JobCard
+                key={job.id}
+                job={job}
+                selected={index === selectedJob}
+                footnote={index === selectedJob ? t('pressEnter') : undefined}
+              />
             ))}
           </box>
         )}
