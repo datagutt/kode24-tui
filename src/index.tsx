@@ -9,6 +9,7 @@ import { ArticlePage } from './pages/ArticlePage.js';
 import { ListingsPage } from './pages/ListingsPage.js';
 import { TagsPage, popularTags } from './pages/TagsPage.js';
 import type { Frontpage } from './types/index.js';
+import { t } from './i18n/index.js';
 
 export const App = () => {
   const [frontpageData, setFrontpageData] = useState<Frontpage | null>(null);
@@ -135,7 +136,7 @@ export const App = () => {
     return (
       <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
         <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
-          <text content="Loading kode24.no frontpage..." style={{ fg: 'blue' }} />
+          <text content={t('loadingFrontpage')} style={{ fg: 'blue' }} />
         </box>
       </Layout>
     );
@@ -146,7 +147,7 @@ export const App = () => {
       <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
         <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
           <text content={`Error: ${error}`} style={{ fg: 'red' }} />
-          <text content="Press 'q' to quit" style={{ fg: 'gray' }} marginTop={1} />
+          <text content={t('pressQToQuit')} style={{ fg: 'gray' }} marginTop={1} />
         </box>
       </Layout>
     );
@@ -156,7 +157,7 @@ export const App = () => {
     return (
       <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
         <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
-          <text content="No data available" style={{ fg: 'yellow' }} />
+          <text content={t('noDataAvailable')} style={{ fg: 'yellow' }} />
         </box>
       </Layout>
     );
@@ -183,8 +184,8 @@ export const App = () => {
           />
         ) : (
           <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
-            <text content="No article selected" style={{ fg: 'yellow' }} />
-            <text content="Press Esc to go back" style={{ fg: 'gray', marginTop: 1 }} />
+            <text content={t('noArticleSelected')} style={{ fg: 'yellow' }} />
+            <text content={t('pressEscToGoBack')} style={{ fg: 'gray', marginTop: 1 }} />
           </box>
         );
       
@@ -215,15 +216,15 @@ export const App = () => {
       case 'events':
         return (
           <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
-            <text content="Events Page (Coming Soon)" style={{ fg: 'cyan' }} />
-            <text content="Press Esc to go back" style={{ fg: 'gray' }} marginTop={1} />
+            <text content={t('eventsComingSoon')} style={{ fg: 'cyan' }} />
+            <text content={t('pressEscToGoBack')} style={{ fg: 'gray' }} marginTop={1} />
           </box>
         );
       
       default:
         return (
           <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
-            <text content="Unknown Page" style={{ fg: 'red' }} />
+            <text content={t('unknownPage')} style={{ fg: 'red' }} />
           </box>
         );
     }

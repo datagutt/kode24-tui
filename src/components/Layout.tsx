@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Page } from '../types/index.js';
 import { themeColors } from '../theme/colors.js';
+import { t } from '../i18n/index.js';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -30,7 +31,7 @@ export const Layout = ({ children, currentPage, breadcrumb }: LayoutProps) => {
       {/* Header */}
       <box style={{ height: 3, width: "100%", backgroundColor: themeColors.header.background, flexDirection: "column", padding: 1 }}>
         <box style={{ alignItems: "center", justifyContent: "center" }}>
-          <text content="🖥️  kode24.no - Terminal Edition" style={{ fg: themeColors.header.text, attributes: 1 }} />
+          <text content={t('headerTitle')} style={{ fg: themeColors.header.text, attributes: 1 }} />
         </box>
         <box style={{ alignItems: "center", justifyContent: "center" }}>
           <text content={getBreadcrumbText()} style={{ fg: themeColors.header.accent }} />
@@ -44,7 +45,7 @@ export const Layout = ({ children, currentPage, breadcrumb }: LayoutProps) => {
       
       {/* Footer */}
       <box style={{ height: 2, width: "100%", backgroundColor: themeColors.footer.background, alignItems: "center", justifyContent: "center" }}>
-        <text content="q=Quit | Esc=Back | ↑↓←→=Navigate | Enter=Select | l=Jobs | t=Tags | e=Events" style={{ fg: themeColors.footer.text }} />
+        <text content={t('footerHelp')} style={{ fg: themeColors.footer.text }} />
       </box>
     </box>
   );

@@ -54,7 +54,7 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
     return (
       <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
         <text content={`Error: ${error}`} style={{ fg: 'red' }} />
-        <text content="Press Esc to go back" style={{ fg: 'gray', marginTop: 1 }} />
+        <text content={t('pressEscToGoBack')} style={{ fg: 'gray', marginTop: 1 }} />
       </box>
     );
   }
@@ -62,8 +62,8 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
   if (!article || !article.page) {
     return (
       <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
-        <text content="Article not found or invalid data" style={{ fg: 'yellow' }} />
-        <text content="Press Esc to go back" style={{ fg: 'gray', marginTop: 1 }} />
+        <text content={t('articleNotFound')} style={{ fg: 'yellow' }} />
+        <text content={t('pressEscToGoBack')} style={{ fg: 'gray', marginTop: 1 }} />
       </box>
     );
   }
@@ -72,9 +72,9 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
   if (!article.page.fields?.title && !article.page.fields?.bodytext) {
     return (
       <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
-        <text content="Article content could not be loaded" style={{ fg: 'red' }} />
-        <text content="Missing title and content data" style={{ fg: 'gray', marginTop: 1 }} />
-        <text content="Press Esc to go back" style={{ fg: 'gray', marginTop: 1 }} />
+        <text content={t('articleContentNotLoaded')} style={{ fg: 'red' }} />
+        <text content={t('missingTitleAndContent')} style={{ fg: 'gray', marginTop: 1 }} />
+        <text content={t('pressEscToGoBack')} style={{ fg: 'gray', marginTop: 1 }} />
       </box>
     );
   }
@@ -86,7 +86,7 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
         {article.page.fields?.title ? (
           <text content={article.page.fields.title} style={{...theme.styles.title, marginBottom: 1}} />
         ) : (
-          <text content="Article title unavailable" style={{ fg: 'red', marginBottom: 1 }} />
+          <text content={t('articleTitleUnavailable')} style={{ fg: 'red', marginBottom: 1 }} />
         )}
         
         <text 
@@ -110,8 +110,8 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
       {/* Article Content */}
       <scrollbox ref={scrollboxRef} style={{ height: "100%", width: "100%" }}>
         <box style={{ flexDirection: "column", padding: 1 }}>
-          <text content="📰 Article Content" style={{ fg: 'green', attributes: 1, marginBottom: 1 }} />
-          
+          <text content={t('articleContent')} style={{ fg: 'green', attributes: 1, marginBottom: 1 }} />
+
           {/* Article body/content */}
           {article.page.fields?.bodytext ? (
             <box style={{ flexDirection: "column", marginBottom: 2 }}>
@@ -119,22 +119,22 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
             </box>
           ) : (
             <box style={{ flexDirection: "column", marginBottom: 2 }}>
-              <text content="⚠️ Article content is not available" style={{ fg: 'yellow', marginBottom: 1 }} />
-              <text content="This could be due to paywall or content formatting issues" style={{ fg: 'gray' }} />
+              <text content={t('articleContentUnavailable')} style={{ fg: 'yellow', marginBottom: 1 }} />
+              <text content={t('paywallOrFormatting')} style={{ fg: 'gray' }} />
             </box>
           )}
           
           {/* Article URL */}
           {article.page.fields?.published_url && (
             <box style={{ flexDirection: "column", marginTop: 2 }}>
-              <text content="🔗 Article URL:" style={{ fg: 'cyan', attributes: 1, marginBottom: 1 }} />
+              <text content={t('articleUrl')} style={{ fg: 'cyan', attributes: 1, marginBottom: 1 }} />
               <text content={`https://www.kode24.no${article.page.fields.published_url}`} style={{ fg: 'blue' }} />
             </box>
           )}
-          
+
           {/* Development info */}
           <box style={{ flexDirection: "column", marginTop: 2, border: true, padding: 1 }}>
-            <text content="🔧 Development Info:" style={{ fg: 'yellow', attributes: 1, marginBottom: 1 }} />
+            <text content={t('developmentInfo')} style={{ fg: 'yellow', attributes: 1, marginBottom: 1 }} />
             <text content={`Article ID: ${articleId}`} style={{ fg: 'cyan', marginBottom: 1 }} />
             <text content={`API Response Keys: ${Object.keys(article).join(', ')}`} style={{ fg: 'cyan', marginBottom: 1 }} />
             <text content={`Type: ${article.page.type}`} style={{ fg: 'cyan', marginBottom: 1 }} />

@@ -171,12 +171,12 @@ export const TagsPage = ({ selectedTag, selectedTagName, onTagSelect }: TagsPage
                          style={{ fg: 'cyan', marginTop: 1 }}
                        />
                      )}
-                     <box style={{ flexDirection: "row", marginTop: 1 }}>
-                       <text content="👁️ " style={{ fg: 'green', marginRight: 1 }} />
-                        <text content={`${article.views || 0} ${t('views')}`} style={{ fg: 'green', marginRight: 2 }} />
-                        <text content="❤️ " style={{ fg: 'red', marginRight: 1 }} />
-                        <text content={`${article.likes || 0} ${t('likes')}`} style={{ fg: 'red' }} />
-                     </box>
+                      <box style={{ flexDirection: "row", marginTop: 1 }}>
+                        <text content={t('viewsIcon')} style={{ fg: 'green', marginRight: 1 }} />
+                         <text content={`${article.views || 0} ${t('views')}`} style={{ fg: 'green', marginRight: 2 }} />
+                         <text content={t('likesIcon')} style={{ fg: 'red', marginRight: 1 }} />
+                         <text content={`${article.likes || 0} ${t('likes')}`} style={{ fg: 'red' }} />
+                      </box>
                    </box>
                  </box>
                ))
