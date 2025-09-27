@@ -6,9 +6,6 @@ export type TeAlias = z.infer<typeof TeAliasSchema>;
 export const SectionSchema = z.enum(["artikkel"]);
 export type Section = z.infer<typeof SectionSchema>;
 
-export const LastnameSchema = z.enum(["", "nytt", "Vasilev"]);
-export type Lastname = z.infer<typeof LastnameSchema>;
-
 export const TypeSchema = z.enum(["article"]);
 export type Type = z.infer<typeof TypeSchema>;
 
@@ -72,7 +69,7 @@ export type PrimaryTags = z.infer<typeof PrimaryTagsSchema>;
 
 export const FullBylineSchema = z.object({
   firstname: z.string(),
-  lastname: LastnameSchema,
+  lastname: z.string(),
   imageUrl: z.string(),
   description: z.string().optional(),
 });
