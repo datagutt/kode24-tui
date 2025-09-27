@@ -3,6 +3,16 @@
   "module": "src/index.tsx",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "bun x tsx src/index.tsx",
+    "build": "bun build src/index.tsx  --compile --outfile kode24 --target bun --minify --external react --external @opentui/react --external @opentui/core --external zod --external @better-fetch/fetch",
+    "build:darwin:arm64": "bun build src/index.tsx  --compile --outfile kode24-darwin-arm64 --target bun-darwin-arm64 --minify --external react --external @opentui/react --external @opentui/core --external zod --external @better-fetch/fetch",
+    "build:darwin:x64": "bun build src/index.tsx  --compile --outfile kode24-darwin-x64 --target bun-darwin-x64 --minify --external react --external @opentui/react --external @opentui/core --external zod --external @better-fetch/fetch",
+    "build:linux:arm64": "bun build src/index.tsx  --compile --outfile kode24-linux-arm64 --target bun-linux-arm64 --minify --external react --external @opentui/react --external @opentui/core --external zod --external @better-fetch/fetch",
+    "build:linux:x64": "bun build src/index.tsx  --compile --outfile kode24-linux-x64 --target bun-linux-x64 --minify --external react --external @opentui/react --external @opentui/core --external zod --external @better-fetch/fetch",
+    "start": "bun run build && bun x serve dist",
+    "test": "bun test"
+  },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.18",
     "@opentui/core": "^0.1.25",
