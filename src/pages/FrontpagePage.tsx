@@ -68,7 +68,7 @@ export const FrontpagePage = ({
         backgroundColor: themeColors.navigation.background,
       }}
     >
-      <box
+      {/*<box
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
@@ -99,7 +99,7 @@ export const FrontpagePage = ({
             style={{ fg: themeColors.navigation.selectedText }}
           />
         </box>
-      </box>
+      </box>*/}
 
       <box
         style={{

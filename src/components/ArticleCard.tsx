@@ -54,7 +54,7 @@ export const ArticleCard = ({ data, selected, prefix, footnote, meta, variant }:
         border: true,
         borderColor,
         padding: pad,
-        marginBottom: kind === 'compact' ? 0 : 1,
+        marginBottom: 1,
         backgroundColor: bg,
       }}
     >
