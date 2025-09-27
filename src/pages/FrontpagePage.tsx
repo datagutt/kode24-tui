@@ -4,6 +4,7 @@ import { colors, themeColors } from '../theme/colors.js';
 import type { ScrollBoxRenderable } from '@opentui/core';
 import { t } from '../i18n/index.js';
 import { JobCard } from '../components/JobCard.js';
+import { ArticleCard } from '../components/ArticleCard.js';
 
 interface FrontpagePageProps {
   frontpageData: Frontpage;
@@ -32,13 +33,23 @@ export const FrontpagePage = ({
   const hero = frontpageData.latestArticles[selectedArticle] ?? frontpageData.latestArticles[0];
   const focusSection = frontpageData.frontpage[selectedSection] ?? frontpageData.frontpage[0];
   const sectionName = focusSection?.title ?? t('sections');
-  const sectionArticles = focusSection?.articles ?? [];
   const totalArticles = frontpageData.latestArticles.length;
   const totalJobs = frontpageData.jobs.length;
   const totalEvents = frontpageData.events.upcomingEvents.length;
   const heroTags = hero?.tags
     ? hero.tags.split(',').map(tag => tag.trim()).filter(Boolean).slice(0, 2)
     : [];
+
+  const formatArticleDate = (value: Date | string): string => {
+    if (value instanceof Date) {
+      return value.toLocaleDateString();
+    }
+    const parsed = Date.parse(value);
+    if (Number.isNaN(parsed)) {
+      return value;
+    }
+    return new Date(parsed).toLocaleDateString();
+  };
 
   return (
     <box style={{ flexDirection: "column", width: "100%", height: "100%", backgroundColor: themeColors.navigation.background }}>
@@ -74,12 +85,6 @@ export const FrontpagePage = ({
             })}
           </scrollbox>
 
-          <box style={{ marginTop: 1, padding: 1, border: true, borderColor: themeColors.navigation.selected }}>
-            <text content={t('quickActions')} style={{ fg: themeColors.navigation.normal, attributes: 1 }} />
-            <text content={`↵ ${t('openSelected')}`} style={{ fg: themeColors.navigation.normal, marginTop: 1 }} />
-            <text content={`L ${t('viewAllJobs')}`} style={{ fg: themeColors.navigation.normal, marginTop: 1 }} />
-            <text content={`T ${t('categoriesTags')}`} style={{ fg: themeColors.navigation.normal, marginTop: 1 }} />
-          </box>
         </box>
 
         <box style={{ flexDirection: "column", width: "60%", marginLeft: 1, marginRight: 1 }}>
@@ -104,21 +109,25 @@ export const FrontpagePage = ({
 
           <scrollbox ref={scrollboxRef} style={{ height: "100%", border: true, borderColor: themeColors.navigation.selected, padding: 1 }}>
             {frontpageData.latestArticles.map((article, index) => {
-              const isSelected = index === selectedArticle;
-              const bg = isSelected ? themeColors.navigation.selected : undefined;
-              const fg = isSelected ? themeColors.navigation.selectedText : themeColors.navigation.normal;
+              const tags = article.tags
+                ? article.tags.split(',').map(tag => tag.trim()).filter(Boolean).slice(0, 3)
+                : [];
               return (
-                <box key={article.id} style={{ flexDirection: "column", padding: 1, backgroundColor: bg, border: true, borderColor: themeColors.navigation.selected, marginBottom: 1 }}>
-                  <text content={`${index + 1}. ${article.title}`} style={{ fg: fg, attributes: isSelected ? 1 : 0 }} />
-                  <text content={`${article.byline.name} • ${new Date(article.published).toLocaleDateString()}`} style={{ fg: themeColors.navigation.normal, marginTop: 0 }} />
-                  {article.subtitle && (
-                    <text content={article.subtitle} style={{ fg: themeColors.tag.name, marginTop: 0 }} />
-                  )}
-                  <box style={{ flexDirection: "row", marginTop: 0 }}>
-                    <text content={`❤️ ${article.reactions.reactions_count}`} style={{ fg: themeColors.navigation.normal, marginRight: 2 }} />
-                    <text content={`💬 ${article.reactions.comments_count}`} style={{ fg: themeColors.navigation.normal }} />
-                  </box>
-                </box>
+                <ArticleCard
+                  key={article.id}
+                  data={{
+                    title: article.title,
+                    subtitle: article.subtitle,
+                    author: article.byline.name,
+                    date: formatArticleDate(article.published),
+                    reactions: article.reactions.reactions_count,
+                    comments: article.reactions.comments_count,
+                    tags,
+                  }}
+                  prefix={`${index + 1}.`}
+                  selected={index === selectedArticle}
+                  footnote={index === selectedArticle ? t('pressEnter') : undefined}
+                />
               );
             })}
           </scrollbox>

@@ -1,3 +1,4 @@
+import type { Key } from 'react';
 import { useTheme } from '../hooks/useTheme.js';
 
 interface ArticleCardData {
@@ -18,6 +19,7 @@ interface ArticleCardProps {
   selected?: boolean;
   prefix?: string;
   footnote?: string;
+  key?: Key;
 }
 
 export const ArticleCard = ({ data, selected, prefix, footnote }: ArticleCardProps) => {

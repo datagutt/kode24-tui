@@ -1,4 +1,4 @@
-import React from 'react';
+import type { Key } from 'react';
 import { useTheme } from '../hooks/useTheme.js';
 import type { Job } from '../types/index.js';
 
@@ -7,6 +7,7 @@ interface JobCardProps {
   selected?: boolean;
   prefix?: string;
   footnote?: string;
+  key?: Key;
 }
 
 const typeGlyph: Record<Job['type'], string> = {
@@ -23,7 +24,7 @@ const formatDate = (value: string): string => {
   return new Date(timestamp).toLocaleDateString();
 };
 
-export const JobCard: React.FC<JobCardProps> = ({ job, selected, prefix, footnote }) => {
+export const JobCard = ({ job, selected, prefix, footnote }: JobCardProps) => {
   const theme = useTheme();
   const badge = `${typeGlyph[job.type]} ${job.type.toUpperCase()}`;
   const published = formatDate(job.published);

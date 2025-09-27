@@ -4,6 +4,8 @@ import { useScrollboxFocus } from "../hooks/useScrollboxFocus.js";
 import type { ScrollBoxRenderable } from "@opentui/core";
 import { t } from "../i18n/index.js";
 import { themeColors } from "../theme/colors.js";
+import { ArticleCard } from "../components/ArticleCard.js";
+import type { ArticleCardData } from "../components/ArticleCard.js";
 
 interface TagsPageProps {
   selectedTag: number;
@@ -44,7 +46,7 @@ export const TagsPage = ({
   onTagSelect,
 }: TagsPageProps) => {
   const [tags, setTags] = useState<TagInfo[]>([]);
-  const [tagArticles, setTagArticles] = useState<any[]>([]);
+  const [tagArticles, setTagArticles] = useState<ArticleCardData[]>([]);
   const [loading, setLoading] = useState(false);
 
   const tagsScrollboxRef = useRef<ScrollBoxRenderable>(null);
@@ -71,7 +73,37 @@ export const TagsPage = ({
     try {
       setLoading(true);
       const articles = await api.fetchTagArticles(tagName);
-      setTagArticles(articles);
+      const mapped: ArticleCardData[] = articles.map((article, index) => {
+        const primaryByline = article.full_bylines?.[0];
+        const author = primaryByline
+          ? `${primaryByline.firstname}${
+              primaryByline.lastname ? ` ${primaryByline.lastname}` : ""
+            }`.trim()
+          : article.byline;
+        const published =
+          article.published instanceof Date
+            ? article.published.toLocaleDateString()
+            : (() => {
+                const parsed = Date.parse(
+                  article.published as unknown as string
+                );
+                return Number.isNaN(parsed)
+                  ? String(article.published ?? "")
+                  : new Date(parsed).toLocaleDateString();
+              })();
+        return {
+          title: article.title || t("articleNumber", { number: index + 1 }),
+          subtitle: article.teaserSubtitle || article.teaserTitle,
+          author: author || t("unknownAuthor"),
+          date: published || t("dateUnknown"),
+          excerpt:
+            article.description ||
+            article.someDescription ||
+            article.teaserDescription,
+          tags: article.tags?.slice(0, 3) ?? [],
+        } satisfies ArticleCardData;
+      });
+      setTagArticles(mapped);
     } catch (error) {
       console.error("Failed to fetch tag articles:", error);
       setTagArticles([]);
@@ -186,63 +218,17 @@ export const TagsPage = ({
                 }}
               >
                 <text content={t("noArticlesFound")} style={{ fg: "yellow" }} />
-                <text
-                  content={t("demoLimitation")}
-                  style={{ fg: "gray", marginTop: 1 }}
-                />
               </box>
             ) : (
-              tagArticles.slice(0, 10).map((article: any, index: number) => (
-                <box
-                  key={index}
-                  style={{
-                    border: true,
-                    marginBottom: 1,
-                    padding: 1,
-                  }}
-                >
-                  <box style={{ flexDirection: "column" }}>
-                    <text
-                      content={
-                        article.title ||
-                        t("articleNumber", { number: index + 1 })
-                      }
-                      style={{ fg: "white", attributes: 1 }}
-                    />
-                    <text
-                      content={t("byAuthorDate", {
-                        name: article.author || t("unknownAuthor"),
-                        date: article.date || t("dateUnknown"),
-                      })}
-                      style={{ fg: "gray", marginTop: 1 }}
-                    />
-                    {article.excerpt && (
-                      <text
-                        content={article.excerpt}
-                        style={{ fg: "cyan", marginTop: 1 }}
-                      />
-                    )}
-                    <box style={{ flexDirection: "row", marginTop: 1 }}>
-                      <text
-                        content={t("viewsIcon")}
-                        style={{ fg: "green", marginRight: 1 }}
-                      />
-                      <text
-                        content={`${article.views || 0} ${t("views")}`}
-                        style={{ fg: "green", marginRight: 2 }}
-                      />
-                      <text
-                        content={t("likesIcon")}
-                        style={{ fg: "red", marginRight: 1 }}
-                      />
-                      <text
-                        content={`${article.likes || 0} ${t("likes")}`}
-                        style={{ fg: "red" }}
-                      />
-                    </box>
-                  </box>
-                </box>
-              ))
+              tagArticles
+                .slice(0, 10)
+                .map((article, index) => (
+                  <ArticleCard
+                    key={`${article.title}-${index}`}
+                    data={article}
+                    prefix={`${index + 1}.`}
+                  />
+                ))
             )}
           </box>
         )}
