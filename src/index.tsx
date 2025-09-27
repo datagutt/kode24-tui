@@ -3,6 +3,7 @@ import { render, useKeyboard } from '@opentui/react';
 import { api } from './services/api.js';
 import { useNavigation } from './hooks/useNavigation.js';
 import { Layout } from './components/Layout.js';
+import { HelpOverlay } from './components/HelpOverlay.js';
 import { FrontpagePage } from './pages/FrontpagePage.js';
 import { ArticlePage } from './pages/ArticlePage.js';
 import { ListingsPage } from './pages/ListingsPage.js';
@@ -14,6 +15,7 @@ export const App = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentArticleId, setCurrentArticleId] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
   
   const { navigation, navigateToPage, goBack, updateSelection } = useNavigation();
 
@@ -23,7 +25,16 @@ export const App = () => {
     }
     
     if (key.name === 'escape') {
-      goBack();
+      if (showHelp) {
+        setShowHelp(false);
+      } else {
+        goBack();
+      }
+      return;
+    }
+    
+    if (key.name === 'h') {
+      setShowHelp(!showHelp);
       return;
     }
 
@@ -196,6 +207,7 @@ export const App = () => {
   return (
     <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
       {renderCurrentPage()}
+      {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
     </Layout>
   );
 };

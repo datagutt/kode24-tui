@@ -61,16 +61,16 @@ _Currently no major items in progress - all high priority MVP features completed
 
 ### Navigation Enhancements
 
-- [ ] Implement proper back navigation history
+- [x] Implement proper back navigation history
 - [ ] Add search functionality across pages
 - [ ] Improve keyboard shortcuts documentation
-- [ ] Add help/shortcuts overlay (h key)
+- [x] Add help/shortcuts overlay (h key)
 
 ### Data & API Integration
 
-- [ ] Test all API endpoints with real data
-- [ ] Implement proper error handling for API failures
-- [ ] Add retry logic for failed requests
+- [x] Test all API endpoints with real data
+- [x] Implement proper error handling for API failures
+- [x] Add retry logic for failed requests
 - [ ] Cache frequently accessed data
 
 ## 📋 TODO - Medium Priority

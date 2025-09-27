@@ -2,55 +2,54 @@ import { useState, useCallback } from 'react';
 import type { Page, NavigationState } from '../types/index.js';
 
 export const useNavigation = (initialPage: Page = 'frontpage') => {
-  const [navigation, setNavigation] = useState<NavigationState>({
+  const [history, setHistory] = useState<NavigationState[]>([{
     currentPage: initialPage,
     selectedIndex: 0,
     selectedSection: 0,
     breadcrumb: [initialPage],
-  });
+  }]);
+
+  const navigation = history[history.length - 1];
 
   const navigateToPage = useCallback((page: Page, resetSelection = true) => {
-    setNavigation(prev => ({
-      ...prev,
-      currentPage: page,
-      selectedIndex: resetSelection ? 0 : prev.selectedIndex,
-      selectedSection: resetSelection ? 0 : prev.selectedSection,
-      breadcrumb: [...prev.breadcrumb, page],
-    }));
+    setHistory(prev => {
+      const current = prev[prev.length - 1];
+      const newState = {
+        currentPage: page,
+        selectedIndex: resetSelection ? 0 : current.selectedIndex,
+        selectedSection: resetSelection ? 0 : current.selectedSection,
+        breadcrumb: [...current.breadcrumb, page],
+      };
+      return [...prev, newState];
+    });
   }, []);
 
   const goBack = useCallback(() => {
-    setNavigation(prev => {
-      if (prev.breadcrumb.length <= 1) return prev;
-      
-      const newBreadcrumb = prev.breadcrumb.slice(0, -1);
-      const previousPage = newBreadcrumb[newBreadcrumb.length - 1] as Page;
-      
-      return {
-        ...prev,
-        currentPage: previousPage,
-        selectedIndex: 0,
-        selectedSection: 0,
-        breadcrumb: newBreadcrumb,
-      };
+    setHistory(prev => {
+      if (prev.length <= 1) return prev;
+      return prev.slice(0, -1);
     });
   }, []);
 
   const updateSelection = useCallback((selectedIndex: number, selectedSection?: number) => {
-    setNavigation(prev => ({
-      ...prev,
-      selectedIndex,
-      selectedSection: selectedSection ?? prev.selectedSection,
-    }));
+    setHistory(prev => {
+      const current = prev[prev.length - 1];
+      const newState = {
+        ...current,
+        selectedIndex,
+        selectedSection: selectedSection ?? current.selectedSection,
+      };
+      return [...prev.slice(0, -1), newState];
+    });
   }, []);
 
   const resetNavigation = useCallback(() => {
-    setNavigation({
+    setHistory([{
       currentPage: 'frontpage',
       selectedIndex: 0,
       selectedSection: 0,
       breadcrumb: ['frontpage'],
-    });
+    }]);
   }, []);
 
   return {
