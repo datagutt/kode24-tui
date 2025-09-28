@@ -112,6 +112,7 @@ export const themeColors = {
     description: palette.paragraph,
     count: palette.yellow,
     selected: palette.cardRaised,
+    background: palette.cardRaised,
   },
   status: {
     loading: palette.teal,

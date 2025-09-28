@@ -8,7 +8,7 @@ import { FrontpagePage } from './pages/FrontpagePage.js';
 import { ArticlePage } from './pages/ArticlePage.js';
 import { ListingsPage } from './pages/ListingsPage.js';
 import { TagsPage, popularTags } from './pages/TagsPage.js';
-import type { Frontpage } from './types/index.js';
+import type { Frontpage, Article } from './types/index.js';
 import { t } from './i18n/index.js';
 
 type KeyEvent = {
@@ -32,12 +32,13 @@ const hasKeyHandler = (value: unknown): value is KeyAwareRenderable => {
 
 export const App = () => {
   const [frontpageData, setFrontpageData] = useState<Frontpage | null>(null);
+  const [filteredFrontpageData, setFilteredFrontpageData] = useState<Frontpage | null>(null);
+  const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
   const [currentArticleId, setCurrentArticleId] = useState<string | null>(null);
   const [selectedTagName, setSelectedTagName] = useState<string | null>(null);
-  const [showHelp, setShowHelp] = useState(false);
-
   const { navigation, navigateToPage, goBack, updateSelection } = useNavigation();
   const renderer = useRenderer();
 
@@ -55,6 +56,10 @@ export const App = () => {
     if (key.name === 'escape') {
       if (showHelp) {
         setShowHelp(false);
+      } else if (selectedTagFilter) {
+        // Clear tag filter first before going back
+        setSelectedTagFilter(null);
+        setFilteredFrontpageData(null);
       } else {
         goBack();
       }
@@ -69,6 +74,7 @@ export const App = () => {
     // Navigation for frontpage
     if (navigation.currentPage === 'frontpage' && frontpageData) {
       const currentSection = navigation.frontpageSection || 'middle';
+      const activeData = filteredFrontpageData || frontpageData;
       
       if (key.name === 'tab') {
         // Tab between sections: left -> middle -> right -> left
@@ -88,26 +94,30 @@ export const App = () => {
           updateSelection(navigation.selectedIndex + 1, navigation.selectedSection, 'left');
         }
         if (key.name === 'return') {
-          // Navigate to tag
-          navigateToPage('tags');
+          // Filter frontpage by selected tag instead of navigating to tags page
+          const selectedTag = popularTags[navigation.selectedIndex];
+          setSelectedTagFilter(selectedTag.name);
+          filterFrontpageByTag(selectedTag.name);
+          // Switch to middle section to show filtered results
+          updateSelection(0, 0, 'middle');
         }
       } else if (currentSection === 'middle') {
         // Middle section navigation (main articles)
         if (key.name === 'up' && navigation.selectedIndex > 0) {
           updateSelection(navigation.selectedIndex - 1, navigation.selectedSection, 'middle');
         }
-        if (key.name === 'down' && navigation.selectedIndex < frontpageData.latestArticles.length - 1) {
+        if (key.name === 'down' && navigation.selectedIndex < activeData.latestArticles.length - 1) {
           updateSelection(navigation.selectedIndex + 1, navigation.selectedSection, 'middle');
         }
         if (key.name === 'left' && navigation.selectedSection > 0) {
           const nextSection = navigation.selectedSection - 1;
           const nextIndex = (() => {
-            const section = frontpageData.frontpage[nextSection];
+            const section = activeData.frontpage[nextSection];
             const firstArticleId = section?.articles[0]?.id;
             if (!firstArticleId) {
               return navigation.selectedIndex;
             }
-            const matchIndex = frontpageData.latestArticles.findIndex(
+            const matchIndex = activeData.latestArticles.findIndex(
               (article) => article.id === firstArticleId
             );
             if (matchIndex >= 0) {
@@ -117,19 +127,19 @@ export const App = () => {
           })();
           const clamped = Math.min(
             Math.max(nextIndex, 0),
-            frontpageData.latestArticles.length - 1
+            activeData.latestArticles.length - 1
           );
           updateSelection(clamped, nextSection, 'middle');
         }
-        if (key.name === 'right' && navigation.selectedSection < frontpageData.frontpage.length - 1) {
+        if (key.name === 'right' && navigation.selectedSection < activeData.frontpage.length - 1) {
           const nextSection = navigation.selectedSection + 1;
           const nextIndex = (() => {
-            const section = frontpageData.frontpage[nextSection];
+            const section = activeData.frontpage[nextSection];
             const firstArticleId = section?.articles[0]?.id;
             if (!firstArticleId) {
               return navigation.selectedIndex;
             }
-            const matchIndex = frontpageData.latestArticles.findIndex(
+            const matchIndex = activeData.latestArticles.findIndex(
               (article) => article.id === firstArticleId
             );
             if (matchIndex >= 0) {
@@ -139,13 +149,13 @@ export const App = () => {
           })();
           const clamped = Math.min(
             Math.max(nextIndex, 0),
-            frontpageData.latestArticles.length - 1
+            activeData.latestArticles.length - 1
           );
           updateSelection(clamped, nextSection, 'middle');
         }
         if (key.name === 'return') {
           // Navigate to selected article
-          const selectedArticle = frontpageData.latestArticles[navigation.selectedIndex];
+          const selectedArticle = activeData.latestArticles[navigation.selectedIndex];
           if (selectedArticle) {
             navigateToArticle(selectedArticle.id);
           }
@@ -181,6 +191,14 @@ export const App = () => {
       if (key.name === 'e') {
         navigateToPage('events');
       }
+      if (key.name === 'c') {
+        // Clear filter shortcut
+        if (selectedTagFilter) {
+          setSelectedTagFilter(null);
+          setFilteredFrontpageData(null);
+          updateSelection(0, 0, 'middle');
+        }
+      }
     }
 
     // Navigation for tags
@@ -213,6 +231,32 @@ export const App = () => {
 
     fetchFrontpage();
   }, []);
+
+  const filterFrontpageByTag = (tagName: string) => {
+    if (!frontpageData) return;
+
+    const filterArticlesByTag = (articles: Article[]) => {
+      return articles.filter(article => {
+        const tags = article.tags ? article.tags.split(',').map((tag: string) => tag.trim().toLowerCase()) : [];
+        return tags.includes(tagName.toLowerCase());
+      });
+    };
+
+    const filterSectionsByTag = (sections: Frontpage["frontpage"]) => {
+      return sections.map(section => ({
+        ...section,
+        articles: filterArticlesByTag(section.articles)
+      })).filter(section => section.articles.length > 0);
+    };
+
+    const filtered: Frontpage = {
+      ...frontpageData,
+      latestArticles: filterArticlesByTag(frontpageData.latestArticles),
+      frontpage: filterSectionsByTag(frontpageData.frontpage)
+    };
+
+    setFilteredFrontpageData(filtered);
+  };
 
   const navigateToArticle = (articleId: string) => {
     setCurrentArticleId(articleId);
@@ -267,12 +311,13 @@ export const App = () => {
       case 'frontpage':
         return (
           <FrontpagePage
-            frontpageData={frontpageData}
+            frontpageData={filteredFrontpageData || frontpageData}
             selectedSection={navigation.selectedSection}
             selectedArticle={navigation.frontpageSection === 'middle' ? navigation.selectedIndex : 0}
             frontpageSection={navigation.frontpageSection || 'middle'}
             selectedTagIndex={navigation.frontpageSection === 'left' ? navigation.selectedIndex : 0}
             selectedSidebarIndex={navigation.frontpageSection === 'right' ? navigation.selectedIndex : 0}
+            selectedTagFilter={selectedTagFilter}
             onNavigateToArticle={navigateToArticle}
             onNavigateToListings={navigateToListings}
           />
@@ -309,8 +354,7 @@ export const App = () => {
             selectedTag={navigation.selectedIndex}
             selectedTagName={selectedTagName}
             onTagSelect={(tag: string) => {
-              // Could navigate to tag articles view
-              console.log('Selected tag:', tag);
+              setSelectedTagName(tag);
             }}
           />
         );
@@ -334,8 +378,8 @@ export const App = () => {
 
   return (
     <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
-      {renderCurrentPage()}
       {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
+      {renderCurrentPage()}
     </Layout>
   );
 };

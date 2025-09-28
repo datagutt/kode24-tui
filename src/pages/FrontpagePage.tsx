@@ -30,6 +30,7 @@ interface FrontpagePageProps {
   frontpageSection: 'left' | 'middle' | 'right';
   selectedTagIndex?: number;
   selectedSidebarIndex?: number;
+  selectedTagFilter?: string | null;
   onNavigateToArticle: (articleId: string) => void;
   onNavigateToListings: () => void;
 }
@@ -41,6 +42,7 @@ export const FrontpagePage = ({
   frontpageSection,
   selectedTagIndex = 0,
   selectedSidebarIndex = 0,
+  selectedTagFilter,
   onNavigateToArticle,
   onNavigateToListings,
 }: FrontpagePageProps) => {
@@ -253,67 +255,61 @@ export const FrontpagePage = ({
         backgroundColor: themeColors.navigation.background,
       }}
     >
-      {/*<box
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: 1,
-          border: true,
-          borderColor: themeColors.navigation.selected,
-          backgroundColor: themeColors.navigation.selected,
-        }}
-      >
-        <box style={{ flexDirection: "column" }}>
+      {/* Filter indicator */}
+      {selectedTagFilter && (
+        <box
+          style={{
+            height: 3,
+            width: "100%",
+            backgroundColor: themeColors.tag.background,
+            padding: 1,
+            marginBottom: 1,
+          }}
+        >
           <text
-            content={t("latestArticles")}
-            style={{ fg: themeColors.navigation.selectedText, marginTop: 0 }}
+            content={`🏷️ Filtering by: #${selectedTagFilter} (press c to clear, esc to clear)`}
+            style={{
+              fg: themeColors.tag.name,
+              attributes: 1,
+            }}
           />
         </box>
-        <box style={{ flexDirection: "row" }}>
-          <text
-            content={`📰 ${totalArticles} ${t("articles")}`}
-            style={{ fg: themeColors.navigation.selectedText, marginRight: 2 }}
-          />
-          <text
-            content={`💼 ${totalJobs} ${t("jobListings")}`}
-            style={{ fg: themeColors.navigation.selectedText, marginRight: 2 }}
-          />
-          <text
-            content={`📅 ${totalEvents} ${t("upcomingEvents")}`}
-            style={{ fg: themeColors.navigation.selectedText }}
-          />
-        </box>
-      </box>*/}
+      )}
 
       <box
         style={{
           flexDirection: "row",
           width: "100%",
           height: "100%",
-          padding: 1,
         }}
       >
+        {/* Left Sidebar */}
         <box
           style={{
-            width: 28,
-            backgroundColor: frontpageSection === 'left' ? themeColors.navigation.selected : themeColors.navigation.background,
-            border: true,
-            borderColor: frontpageSection === 'left' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+            width: "20%",
+            backgroundColor: themeColors.navigation.background,
             flexDirection: "column",
             padding: 1,
+            marginRight: 1,
           }}
         >
           <text
             content={t("categoriesTags")}
-            style={{ 
-              fg: frontpageSection === 'left' ? themeColors.navigation.selectedText : themeColors.navigation.normal, 
-              attributes: 1 
-            }}
+            style={{ fg: themeColors.navigation.normal, attributes: 1 }}
           />
-          <scrollbox style={{ height: "80%", marginTop: 1 }}>
+          <scrollbox
+            style={{
+              height: "100%",
+              border: true,
+              borderColor: frontpageSection === 'left' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+              backgroundColor: frontpageSection === 'left' ? themeColors.navigation.selected : 'transparent',
+              padding: 1,
+              marginTop: 1,
+            }}
+          >
             {popularTags.map((tag, index) => {
               const isSelected = frontpageSection === 'left' && index === selectedTagIndex;
+              const isActiveFilter = selectedTagFilter === tag.name;
               return (
                 <box
                   key={tag.name}
@@ -321,15 +317,15 @@ export const FrontpagePage = ({
                     marginBottom: 1,
                     padding: 1,
                     border: true,
-                    borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-                    backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
+                    borderColor: isSelected ? themeColors.navigation.selectedText : isActiveFilter ? themeColors.tag.background : themeColors.navigation.selected,
+                    backgroundColor: isSelected ? themeColors.navigation.selectedText : isActiveFilter ? themeColors.tag.background : colors.surface.card,
                   }}
                 >
                   <text
-                    content={`#${tag.name}`}
+                    content={`${isActiveFilter ? '🏷️ ' : ''}#${tag.name}`}
                     style={{ 
-                      fg: isSelected ? themeColors.navigation.background : themeColors.tag.name, 
-                      attributes: 1 
+                      fg: isSelected ? themeColors.navigation.background : isActiveFilter ? themeColors.tag.name : themeColors.tag.name, 
+                      attributes: isActiveFilter ? 1 : 0
                     }}
                   />
                 </box>
@@ -338,6 +334,7 @@ export const FrontpagePage = ({
           </scrollbox>
         </box>
 
+        {/* Middle Section */}
         <box
           style={{
             flexDirection: "column",
@@ -356,33 +353,130 @@ export const FrontpagePage = ({
               padding: 1,
             }}
           >
-            {contentBlocks.map((block, blockIndex) => {
-              if (block.type === "articles") {
-                const heading =
-                  block.chunkIndex === 0
-                    ? t("latestArticles")
-                    : t("moreFrontpageArticles");
+            {contentBlocks.length === 0 && selectedTagFilter ? (
+              <box
+                style={{
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                }}
+              >
+                <text
+                  content={`No articles found for tag: #${selectedTagFilter}`}
+                  style={{ fg: 'yellow', attributes: 1, marginBottom: 2 }}
+                />
+                <text
+                  content="Press 'c' or 'esc' to clear filter"
+                  style={{ fg: 'gray' }}
+                />
+              </box>
+            ) : (
+              contentBlocks.map((block, blockIndex) => {
+                if (block.type === "articles") {
+                  const heading =
+                    block.chunkIndex === 0
+                      ? selectedTagFilter 
+                        ? `Articles tagged with #${selectedTagFilter}`
+                        : t("latestArticles")
+                      : t("moreFrontpageArticles");
+                  return (
+                    <box
+                      key={`articles-${blockIndex}`}
+                      style={{
+                        flexDirection: "column",
+                        border: true,
+                        borderColor: themeColors.navigation.selected,
+                        padding: 1,
+                        marginBottom: 1,
+                        backgroundColor: colors.surface.card,
+                      }}
+                    >
+                      <text
+                        content={heading}
+                        style={{
+                          fg: themeColors.navigation.normal,
+                          attributes: block.chunkIndex === 0 ? 1 : 0,
+                        }}
+                      />
+                      <box style={{ flexDirection: "column", marginTop: 1 }}>
+                        {block.articles.map((article, articleIndex) => {
+                          const tags = article.tags
+                            ? article.tags
+                                .split(",")
+                                .map((tag) => tag.trim())
+                                .filter(Boolean)
+                                .slice(0, 3)
+                            : [];
+                          const globalIndex = block.startIndex + articleIndex;
+                          const isSelected = globalIndex === selectedArticle;
+                          return (
+                            <ArticleCard
+                              key={article.id}
+                              data={{
+                                title: article.title,
+                                subtitle: article.subtitle,
+                                author: article.byline.name,
+                                date: formatArticleDate(article.published),
+                                reactions: article.reactions.reactions_count,
+                                comments: article.reactions.comments_count,
+                                tags,
+                              }}
+                              prefix={`${globalIndex + 1}.`}
+                              selected={isSelected}
+                              footnote={
+                                isSelected ? t("pressEnter") : undefined
+                              }
+                              variant={block.chunkIndex === 0 ? "default" : "compact"}
+                            />
+                          );
+                        })}
+                      </box>
+                    </box>
+                  );
+                }
+
+                const isFocus = block.sectionIndex === selectedSection;
+                const focusBg = isFocus
+                  ? themeColors.navigation.selected
+                  : colors.surface.card;
+                const titleFg = isFocus
+                  ? themeColors.navigation.selectedText
+                  : themeColors.navigation.normal;
+                const items = clampSectionArticles(block.section);
+                const tagLabel = block.section.tags1
+                  ? `#${block.section.tags1}`
+                  : undefined;
                 return (
                   <box
-                    key={`articles-${blockIndex}`}
+                    key={`section-${block.section.title}-${blockIndex}`}
                     style={{
                       flexDirection: "column",
                       border: true,
                       borderColor: themeColors.navigation.selected,
                       padding: 1,
                       marginBottom: 1,
-                      backgroundColor: colors.surface.card,
+                      backgroundColor: focusBg,
                     }}
                   >
                     <text
-                      content={heading}
-                      style={{
-                        fg: themeColors.navigation.normal,
-                        attributes: block.chunkIndex === 0 ? 1 : 0,
-                      }}
+                      content={block.section.title}
+                      style={{ fg: titleFg, attributes: 1 }}
                     />
+                    {block.section.description ? (
+                      <text
+                        content={block.section.description}
+                        style={{ fg: themeColors.navigation.normal, marginTop: 0 }}
+                      />
+                    ) : null}
+                    {tagLabel ? (
+                      <text
+                        content={tagLabel}
+                        style={{ fg: themeColors.tag.name, marginTop: 1 }}
+                      />
+                    ) : null}
                     <box style={{ flexDirection: "column", marginTop: 1 }}>
-                      {block.articles.map((article, articleIndex) => {
+                      {items.map((article, articleIndex) => {
                         const tags = article.tags
                           ? article.tags
                               .split(",")
@@ -390,8 +484,6 @@ export const FrontpagePage = ({
                               .filter(Boolean)
                               .slice(0, 3)
                           : [];
-                        const globalIndex = block.startIndex + articleIndex;
-                        const isSelected = globalIndex === selectedArticle;
                         return (
                           <ArticleCard
                             key={article.id}
@@ -404,236 +496,133 @@ export const FrontpagePage = ({
                               comments: article.reactions.comments_count,
                               tags,
                             }}
-                            prefix={`${globalIndex + 1}.`}
-                            selected={isSelected}
-                            footnote={
-                              isSelected ? t("pressEnter") : undefined
-                            }
-                            variant={block.chunkIndex === 0 ? "default" : "compact"}
+                            footnote={t("pressEnterToRead")}
+                            prefix={`${articleIndex + 1}.`}
+                            variant="compact"
                           />
                         );
                       })}
                     </box>
                   </box>
                 );
-              }
-
-              const isFocus = block.sectionIndex === selectedSection;
-              const focusBg = isFocus
-                ? themeColors.navigation.selected
-                : colors.surface.card;
-              const titleFg = isFocus
-                ? themeColors.navigation.selectedText
-                : themeColors.navigation.normal;
-              const items = clampSectionArticles(block.section);
-              const tagLabel = block.section.tags1
-                ? `#${block.section.tags1}`
-                : undefined;
-              return (
-                <box
-                  key={`section-${block.section.title}-${blockIndex}`}
-                  style={{
-                    flexDirection: "column",
-                    border: true,
-                    borderColor: themeColors.navigation.selected,
-                    padding: 1,
-                    marginBottom: 1,
-                    backgroundColor: focusBg,
-                  }}
-                >
-                  <text
-                    content={block.section.title}
-                    style={{ fg: titleFg, attributes: 1 }}
-                  />
-                  {block.section.description ? (
-                    <text
-                      content={block.section.description}
-                      style={{ fg: themeColors.navigation.normal, marginTop: 0 }}
-                    />
-                  ) : null}
-                  {tagLabel ? (
-                    <text
-                      content={tagLabel}
-                      style={{ fg: themeColors.tag.name, marginTop: 1 }}
-                    />
-                  ) : null}
-                  <box style={{ flexDirection: "column", marginTop: 1 }}>
-                    {items.map((article, articleIndex) => {
-                      const tags = article.tags
-                        ? article.tags
-                            .split(",")
-                            .map((tag) => tag.trim())
-                            .filter(Boolean)
-                            .slice(0, 3)
-                        : [];
-                      const isSelected = article.id === selectedArticleId;
-                      return (
-                        <ArticleCard
-                          key={article.id}
-                          data={{
-                            title: article.title,
-                            subtitle: article.subtitle,
-                            author: article.byline.name,
-                            date: formatArticleDate(article.published),
-                            reactions: article.reactions.reactions_count,
-                            comments: article.reactions.comments_count,
-                            tags,
-                          }}
-                          prefix={`${articleIndex + 1}.`}
-                          selected={isSelected}
-                          footnote={
-                            isSelected ? t("pressEnter") : undefined
-                          }
-                          variant="compact"
-                        />
-                      );
-                    })}
-                  </box>
-                </box>
-              );
-            })}
+              })
+            )}
           </scrollbox>
         </box>
 
+        {/* Right Sidebar */}
         <box
           style={{
-            width: 32,
-            border: true,
-            borderColor: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-            backgroundColor: frontpageSection === 'right' ? themeColors.navigation.selected : colors.surface.raised,
+            width: "20%",
+            backgroundColor: themeColors.navigation.background,
             flexDirection: "column",
             padding: 1,
+            marginLeft: 1,
           }}
         >
-          <scrollbox style={{ height: "100%" }}>
-            <text
-              content={t("recentJobs")}
-              style={{ 
-                fg: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.normal, 
-                attributes: 1 
-              }}
-            />
-            {frontpageData.jobs.slice(0, 4).map((job, index) => {
+          <text
+            content={t("jobsEvents")}
+            style={{ fg: themeColors.navigation.normal, attributes: 1 }}
+          />
+          <scrollbox
+            style={{
+              height: "100%",
+              border: true,
+              borderColor: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+              backgroundColor: frontpageSection === 'right' ? themeColors.navigation.selected : 'transparent',
+              padding: 1,
+              marginTop: 1,
+            }}
+          >
+            {/* Jobs */}
+            {frontpageData.jobs.slice(0, 3).map((job, index) => {
               const isSelected = frontpageSection === 'right' && index === selectedSidebarIndex;
               return (
-                <box
+                <JobCard
                   key={job.id}
-                  style={{
-                    border: true,
-                    borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-                    backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
-                    marginTop: 1,
-                    padding: 1,
-                  }}
-                >
-                  <JobCard job={job} variant="compact" />
-                </box>
+                  job={job}
+                  selected={isSelected}
+                />
               );
             })}
 
+            {/* View All Jobs Button */}
+            <box
+              style={{
+                marginTop: 1,
+                marginBottom: 2,
+                padding: 1,
+                border: true,
+                borderColor: frontpageSection === 'right' && selectedSidebarIndex === frontpageData.jobs.length ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+                backgroundColor: frontpageSection === 'right' && selectedSidebarIndex === frontpageData.jobs.length ? themeColors.navigation.selectedText : colors.surface.card,
+              }}
+            >
+              <text
+                content={`→ ${t("viewAllJobs")}`}
+                style={{
+                  fg: frontpageSection === 'right' && selectedSidebarIndex === frontpageData.jobs.length ? themeColors.navigation.background : themeColors.navigation.normal,
+                  attributes: 1,
+                }}
+              />
+            </box>
+
+            {/* Events */}
             <text
               content={t("upcomingEvents")}
-              style={{
-                fg: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.normal,
-                attributes: 1,
-                marginTop: 2,
-              }}
+              style={{ fg: themeColors.navigation.normal, attributes: 1, marginBottom: 1 }}
             />
-            {frontpageData.events.upcomingEvents.slice(0, 3).map((event, index) => {
-              const globalIndex = frontpageData.jobs.length + index;
-              const isSelected = frontpageSection === 'right' && globalIndex === selectedSidebarIndex;
+            {frontpageData.events.upcomingEvents.slice(0, 2).map((event, index) => {
+              const eventIndex = frontpageData.jobs.length + 1 + index;
+              const isSelected = frontpageSection === 'right' && eventIndex === selectedSidebarIndex;
               return (
                 <box
-                  key={event.name}
+                  key={event.link}
                   style={{
+                    marginBottom: 1,
+                    padding: 1,
                     border: true,
                     borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-                    marginTop: 1,
-                    padding: 1,
                     backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
                   }}
                 >
                   <text
                     content={event.name}
-                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.selectedText }}
-                  />
-                  <text
-                    content={event.arrangedBy}
-                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
-                  />
-                  <text
-                    content={event.startDateFormatted}
-                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
+                    style={{
+                      fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal,
+                    }}
                   />
                 </box>
               );
             })}
 
+            {/* Comments */}
             <text
-              content={t("recentComments")}
-              style={{
-                fg: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.normal,
-                attributes: 1,
-                marginTop: 2,
-              }}
+              content={t("newestComments")}
+              style={{ fg: themeColors.navigation.normal, attributes: 1, marginTop: 2, marginBottom: 1 }}
             />
-            {frontpageData.newestComments.slice(0, 3).map((comment, index) => {
-              const globalIndex = frontpageData.jobs.length + frontpageData.events.upcomingEvents.length + index;
-              const isSelected = frontpageSection === 'right' && globalIndex === selectedSidebarIndex;
+            {frontpageData.newestComments.slice(0, 2).map((comment, index) => {
+              const commentIndex = frontpageData.jobs.length + 1 + frontpageData.events.upcomingEvents.length + index;
+              const isSelected = frontpageSection === 'right' && commentIndex === selectedSidebarIndex;
               return (
                 <box
-                  key={comment.page_identifier}
+                  key={comment.url}
                   style={{
+                    marginBottom: 1,
+                    padding: 1,
                     border: true,
                     borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-                    marginTop: 1,
-                    padding: 1,
                     backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
                   }}
                 >
                   <text
-                    content={comment.user.name}
-                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.selectedText }}
-                  />
-                  <text
-                    content={comment.bodySnippet.slice(0, 60)}
-                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
+                    content={comment.articleTitle || comment.user?.name || t("anonymousComment")}
+                    style={{
+                      fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal,
+                    }}
                   />
                 </box>
               );
             })}
-
-            <box style={{ marginTop: 2 }}>
-              {(() => {
-                const globalIndex = frontpageData.jobs.length + frontpageData.events.upcomingEvents.length + frontpageData.newestComments.length;
-                const isSelected = frontpageSection === 'right' && globalIndex === selectedSidebarIndex;
-                return (
-                  <box
-                    style={{
-                      border: true,
-                      borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-                      padding: 1,
-                      backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
-                    }}
-                  >
-                    <text
-                      content={t("viewAllJobs")}
-                      style={{ 
-                        fg: isSelected ? themeColors.navigation.background : themeColors.navigation.selectedText, 
-                        attributes: 1 
-                      }}
-                    />
-                    <text
-                      content={t("pressEnter")}
-                      style={{ 
-                        fg: isSelected ? themeColors.navigation.background : themeColors.navigation.selectedText, 
-                        marginTop: 0 
-                      }}
-                    />
-                  </box>
-                );
-              })()}
-            </box>
           </scrollbox>
         </box>
       </box>
