@@ -43,6 +43,8 @@ _Currently no major items in progress - all high priority MVP features completed
 - [x] Created `src/pages/FrontpageNavigationHandler.tsx` - Frontpage-specific navigation logic
 - [x] Made scroll-by-navigating-items generic and reusable across all pages
 - [x] Improved code organization and separation of concerns
+- [x] Enhanced scroll behavior with intelligent visibility detection
+- [x] Applied scroll-to-selection to all frontpage components (left/middle/right)
 
 ### TypeScript Integration Issues (COMPLETED ✅)
 

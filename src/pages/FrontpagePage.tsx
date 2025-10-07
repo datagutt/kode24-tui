@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef } from "react";
 import type { Frontpage } from "../types/index.js";
 import { colors, themeColors } from "../theme/colors.js";
 import type { ScrollBoxRenderable } from "@opentui/core";
+import { useListNavigation } from "../hooks/useListNavigation.js";
 import { t } from "../i18n/index.js";
 import { JobCard } from "../components/JobCard.js";
 import { ArticleCard } from "../components/ArticleCard.js";
@@ -46,7 +47,6 @@ export const FrontpagePage = ({
   onNavigateToArticle,
   onNavigateToListings,
 }: FrontpagePageProps) => {
-  const sectionsRef = useRef<ScrollBoxRenderable>(null);
 
   const chunkPattern = [3, 2] as const;
   const totalSections = frontpageData.frontpage.length;
@@ -177,63 +177,71 @@ export const FrontpagePage = ({
     [frontpageData.latestArticles, selectedArticle, frontpageSection]
   );
 
-  useEffect(() => {
-    if (!sectionsRef.current || frontpageSection !== 'middle') {
-      return;
-    }
-    const sectionMetrics = metrics.sectionOffsets.get(selectedSection);
-    if (!sectionMetrics) {
-      return;
-    }
-    const scrollTop = sectionsRef.current.scrollTop ?? 0;
-    const viewportHeight =
-      typeof sectionsRef.current.height === "number"
-        ? sectionsRef.current.height
-        : 60;
-    const buffer = 2;
-    const top = sectionMetrics.top;
-    const bottom = sectionMetrics.top + sectionMetrics.height;
-    const viewBottom = scrollTop + viewportHeight;
-    if (top < scrollTop + buffer) {
-      sectionsRef.current.scrollTop = Math.max(0, top - buffer);
-      return;
-    }
-    if (bottom > viewBottom - buffer) {
-      sectionsRef.current.scrollTop = Math.max(
-        0,
-        bottom - viewportHeight + buffer
-      );
-    }
-  }, [metrics, selectedSection, frontpageSection]);
+  const leftSidebarMetrics = useMemo(() => {
+    const metrics: Record<number, { top: number; height: number }> = {};
+    const itemHeight = 4;
+    popularTags.forEach((_, index) => {
+      metrics[index] = { top: index * itemHeight, height: itemHeight };
+    });
+    return metrics;
+  }, []);
 
-  useEffect(() => {
-    if (!sectionsRef.current || !selectedArticleId || frontpageSection !== 'middle') {
-      return;
+  const rightSidebarMetrics = useMemo(() => {
+    const metrics: Record<number, { top: number; height: number }> = {};
+    const itemHeight = 4;
+    const jobCount = frontpageData.jobs.length;
+    const eventCount = frontpageData.events.upcomingEvents.length;
+    const commentCount = frontpageData.newestComments.length;
+    
+    let offset = 0;
+    
+    for (let i = 0; i < jobCount; i++) {
+      metrics[i] = { top: offset, height: itemHeight };
+      offset += itemHeight;
     }
-    const articleMetrics = metrics.articleOffsets[selectedArticleId];
-    if (!articleMetrics) {
-      return;
+    
+    offset += 5;
+    metrics[jobCount] = { top: offset, height: 3 };
+    offset += 3;
+    
+    offset += 3;
+    for (let i = 0; i < eventCount; i++) {
+      const index = jobCount + 1 + i;
+      metrics[index] = { top: offset, height: itemHeight };
+      offset += itemHeight;
     }
-    const scrollTop = sectionsRef.current.scrollTop ?? 0;
-    const viewportHeight =
-      typeof sectionsRef.current.height === "number"
-        ? sectionsRef.current.height
-        : 60;
-    const buffer = 2;
-    const top = articleMetrics.top;
-    const bottom = articleMetrics.top + articleMetrics.height;
-    const viewBottom = scrollTop + viewportHeight;
-    if (top < scrollTop + buffer) {
-      sectionsRef.current.scrollTop = Math.max(0, top - buffer);
-      return;
+    
+    offset += 4;
+    for (let i = 0; i < commentCount; i++) {
+      const index = jobCount + 1 + eventCount + i;
+      metrics[index] = { top: offset, height: itemHeight };
+      offset += itemHeight;
     }
-    if (bottom > viewBottom - buffer) {
-      sectionsRef.current.scrollTop = Math.max(
-        0,
-        bottom - viewportHeight + buffer
-      );
-    }
-  }, [metrics, selectedArticleId, frontpageSection]);
+    
+    return metrics;
+  }, [frontpageData.jobs.length, frontpageData.events.upcomingEvents.length, frontpageData.newestComments.length]);
+
+  const leftSidebarRef = useListNavigation({
+    selectedIndex: selectedTagIndex,
+    isActive: frontpageSection === 'left',
+    metrics: leftSidebarMetrics,
+    buffer: 2,
+  });
+
+  const rightSidebarRef = useListNavigation({
+    selectedIndex: selectedSidebarIndex,
+    isActive: frontpageSection === 'right',
+    metrics: rightSidebarMetrics,
+    buffer: 2,
+  });
+
+  const middleSectionRef = useListNavigation({
+    selectedIndex: selectedArticle,
+    isActive: frontpageSection === 'middle',
+    metrics: metrics.articleOffsets,
+    buffer: 1,
+    scrollBehavior: 'minimal',
+  });
 
   const formatArticleDate = (value: Date | string): string => {
     if (value instanceof Date) {
@@ -298,6 +306,7 @@ export const FrontpagePage = ({
             style={{ fg: themeColors.navigation.normal, attributes: 1 }}
           />
           <scrollbox
+            ref={leftSidebarRef}
             style={{
               height: "100%",
               border: true,
@@ -344,7 +353,7 @@ export const FrontpagePage = ({
           }}
         >
           <scrollbox
-            ref={sectionsRef}
+            ref={middleSectionRef}
             style={{
               height: "100%",
               border: true,

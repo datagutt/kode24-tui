@@ -14,6 +14,9 @@ This document describes the refactoring work done on 2025-10-07 to improve code 
   - Accepts selectedIndex, isActive flag, metrics (Map or Record), and optional buffer
   - Automatically scrolls scrollbox to keep selected item in view
   - Works with both Map and Record-based metrics
+  - Intelligent scroll behavior: only scrolls when item is not fully visible
+  - Two scroll behaviors: 'minimal' (default) and 'smooth'
+  - Tracks scroll direction for better UX
   - Reusable across any page with list navigation
 - **Usage**:
   ```typescript
@@ -21,7 +24,8 @@ This document describes the refactoring work done on 2025-10-07 to improve code 
     selectedIndex: 0,
     isActive: true,
     metrics: { 0: { top: 0, height: 10 } },
-    buffer: 2
+    buffer: 2,
+    scrollBehavior: 'minimal'
   });
   ```
 
@@ -156,6 +160,23 @@ This document describes the refactoring work done on 2025-10-07 to improve code 
      {/* content */}
    </scrollbox>
    ```
+
+## Recent Improvements (2025-10-07 Update)
+
+### Enhanced Scroll Behavior
+- Improved `useListNavigation` hook with intelligent scrolling
+- Only scrolls when selected item is not fully visible
+- Tracks scroll direction for better UX
+- Added configurable scroll behaviors ('minimal' and 'smooth')
+- Applied scroll-to-selection to all frontpage sections:
+  - Left sidebar (tags)
+  - Middle section (articles)
+  - Right sidebar (jobs/events/comments)
+
+### Better Responsiveness
+- Reduced unnecessary scrolling
+- Smoother navigation experience
+- More predictable scroll behavior
 
 ## Future Improvements
 
