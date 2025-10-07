@@ -19,8 +19,6 @@ export const Layout = ({ children, currentPage, breadcrumb }: LayoutProps) => {
         return "📰 Article";
       case "listings":
         return "💼 Job Listings";
-      case "tags":
-        return "🏷️  Tags";
       case "events":
         return "📅 Events";
       default:

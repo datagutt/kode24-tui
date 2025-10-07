@@ -7,7 +7,7 @@ import { HelpOverlay } from './components/HelpOverlay.js';
 import { FrontpagePage } from './pages/FrontpagePage.js';
 import { ArticlePage } from './pages/ArticlePage.js';
 import { ListingsPage } from './pages/ListingsPage.js';
-import { TagsPage, popularTags } from './pages/TagsPage.js';
+import { popularTags } from './pages/TagsPage.js';
 import type { Frontpage, Article } from './types/index.js';
 import { t } from './i18n/index.js';
 
@@ -56,10 +56,11 @@ export const App = () => {
     if (key.name === 'escape') {
       if (showHelp) {
         setShowHelp(false);
-      } else if (selectedTagFilter) {
-        // Clear tag filter first before going back
+      } else if (selectedTagFilter && navigation.currentPage === 'frontpage') {
+        // Clear tag filter when on frontpage
         setSelectedTagFilter(null);
         setFilteredFrontpageData(null);
+        updateSelection(0, 0, 'middle');
       } else {
         goBack();
       }
@@ -185,9 +186,6 @@ export const App = () => {
       if (key.name === 'l') {
         navigateToPage('listings');
       }
-      if (key.name === 't') {
-        navigateToPage('tags');
-      }
       if (key.name === 'e') {
         navigateToPage('events');
       }
@@ -198,20 +196,6 @@ export const App = () => {
           setFilteredFrontpageData(null);
           updateSelection(0, 0, 'middle');
         }
-      }
-    }
-
-    // Navigation for tags
-    if (navigation.currentPage === 'tags') {
-      if (key.name === 'up' && navigation.selectedIndex > 0) {
-        updateSelection(navigation.selectedIndex - 1);
-      }
-      if (key.name === 'down' && navigation.selectedIndex < popularTags.length - 1) {
-        updateSelection(navigation.selectedIndex + 1);
-      }
-      if (key.name === 'return') {
-        // Select the tag
-        setSelectedTagName(popularTags[navigation.selectedIndex].name);
       }
     }
   });
@@ -231,6 +215,20 @@ export const App = () => {
 
     fetchFrontpage();
   }, []);
+
+  useEffect(() => {
+    if (navigation.currentPage !== 'article') {
+      setCurrentArticleId(null);
+    }
+  }, [navigation.currentPage]);
+
+  useEffect(() => {
+    // Clear filter when leaving frontpage and returning to it
+    if (navigation.currentPage !== 'frontpage' && selectedTagFilter) {
+      setSelectedTagFilter(null);
+      setFilteredFrontpageData(null);
+    }
+  }, [navigation.currentPage, selectedTagFilter]);
 
   const filterFrontpageByTag = (tagName: string) => {
     if (!frontpageData) return;
@@ -265,10 +263,6 @@ export const App = () => {
 
   const navigateToListings = () => {
     navigateToPage('listings');
-  };
-
-  const navigateToTags = () => {
-    navigateToPage('tags');
   };
 
   const navigateToEvents = () => {
@@ -309,11 +303,15 @@ export const App = () => {
   const renderCurrentPage = () => {
     switch (navigation.currentPage) {
       case 'frontpage':
+        const activeData = filteredFrontpageData || frontpageData;
+        const maxArticleIndex = Math.max(0, activeData.latestArticles.length - 1);
+        const safeSelectedArticle = Math.min(navigation.selectedIndex, maxArticleIndex);
+        
         return (
           <FrontpagePage
-            frontpageData={filteredFrontpageData || frontpageData}
+            frontpageData={activeData}
             selectedSection={navigation.selectedSection}
-            selectedArticle={navigation.frontpageSection === 'middle' ? navigation.selectedIndex : 0}
+            selectedArticle={navigation.frontpageSection === 'middle' ? safeSelectedArticle : 0}
             frontpageSection={navigation.frontpageSection || 'middle'}
             selectedTagIndex={navigation.frontpageSection === 'left' ? navigation.selectedIndex : 0}
             selectedSidebarIndex={navigation.frontpageSection === 'right' ? navigation.selectedIndex : 0}
@@ -344,17 +342,6 @@ export const App = () => {
             onJobSelect={(jobId: string) => {
               // Could navigate to job details page in future
               console.log('Selected job:', jobId);
-            }}
-          />
-        );
-      
-      case 'tags':
-        return (
-          <TagsPage
-            selectedTag={navigation.selectedIndex}
-            selectedTagName={selectedTagName}
-            onTagSelect={(tag: string) => {
-              setSelectedTagName(tag);
             }}
           />
         );

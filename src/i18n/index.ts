@@ -53,6 +53,7 @@ export const translations: Record<string, string> = {
 
   // General
   pressEnter: "Trykk Enter for å se detaljer",
+  pressEnterToRead: "Trykk Enter for å lese",
   pressEnterViewArticles: "Trykk Enter for å se artikler",
 
   // General UI
@@ -77,7 +78,7 @@ export const translations: Record<string, string> = {
   developmentInfo: "🔧 Utviklingsinfo:",
   headerTitle: "kode24.no",
   footerHelp:
-    "q=Avslutt | Esc=Tilbake | ↑↓←→=Naviger | Enter=Velg | l=Jobber | t=Tags | e=Arrangementer",
+    "q=Avslutt | Esc=Tilbake | ↑↓←→=Naviger | Enter=Velg | Tab=Bytt seksjon | l=Jobber | c=Fjern filter",
 
   // Help
   keyboardShortcuts: "Tastatursnarveier",
@@ -88,7 +89,6 @@ export const translations: Record<string, string> = {
   navEsc: "  Esc - Gå tilbake",
   pages: "Sider:",
   pageListings: "  l - Stillingsutlysninger",
-  pageTags: "  t - Tags",
   pageEvents: "  e - Arrangementer",
   general: "Generelt:",
   helpToggle: "  h - Vis/skjul denne hjelpen",

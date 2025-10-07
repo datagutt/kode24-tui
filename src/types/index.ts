@@ -7,7 +7,7 @@ import type { Frontpage, Job } from '../schemas/frontpage.js';
 import type { Lab } from '../schemas/lab.js';
 
 // Navigation types
-export type Page = 'frontpage' | 'article' | 'listings' | 'tags' | 'events';
+export type Page = 'frontpage' | 'article' | 'listings' | 'events';
 
 export interface NavigationState {
   currentPage: Page;
