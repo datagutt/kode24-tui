@@ -9,6 +9,13 @@ import type { Lab } from '../schemas/lab.js';
 // Navigation types
 export type Page = 'frontpage' | 'article' | 'listings' | 'events';
 
+export interface KeyEvent {
+  name: string;
+  ctrl?: boolean;
+  meta?: boolean;
+  shift?: boolean;
+}
+
 export interface NavigationState {
   currentPage: Page;
   selectedIndex: number;

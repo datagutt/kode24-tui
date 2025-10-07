@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import type { Frontpage } from "../types/index.js";
 import { colors, themeColors } from "../theme/colors.js";
 import type { ScrollBoxRenderable } from "@opentui/core";

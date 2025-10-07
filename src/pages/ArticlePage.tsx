@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../services/api.js';
 import { useTheme } from '../hooks/useTheme.js';
+import { useScrollboxFocus } from '../hooks/useScrollboxFocus.js';
 import { convertHTMLToOpenTUI } from '../utils/htmlToOpenTUI.js';
 import type { Lab } from '../types/index.js';
-import type { ScrollBoxRenderable } from '@opentui/core';
 import { t } from '../i18n/index.js';
 
 interface ArticlePageProps {
@@ -16,7 +16,7 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const theme = useTheme();
-  const scrollboxRef = useRef<ScrollBoxRenderable | null>(null);
+  const scrollboxRef = useScrollboxFocus([article]);
 
   useEffect(() => {
     async function fetchArticle() {
@@ -34,17 +34,6 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
 
     fetchArticle();
   }, [articleId]);
-
-  // Focus the scrollbox when article loads
-  useEffect(() => {
-    const node = scrollboxRef.current;
-    if (article && node) {
-      node.focus();
-    }
-    return () => {
-      node?.blur?.();
-    };
-  }, [article]);
 
   if (loading) {
     return (
