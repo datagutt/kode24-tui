@@ -63,21 +63,21 @@ export type Reactions = z.infer<typeof ReactionsSchema>;
 export const JobAdsSanityCompanySchema = z.object({
     "name": z.string(),
     "logo": z.string(),
-    "logoBackgroundLight": z.null(),
-    "logoBackgroundDark": z.null(),
-    "logoReal": z.string(),
-    "logoRealDark": z.string(),
+    "logoBackgroundLight": z.union([z.null(), z.string()]),
+    "logoBackgroundDark": z.union([z.null(), z.string()]),
+    "logoReal": z.union([z.null(), z.string()]),
+    "logoRealDark": z.union([z.null(), z.string()]),
 });
 export type JobAdsSanityCompany = z.infer<typeof JobAdsSanityCompanySchema>;
 
 export const JobCompanySchema = z.object({
     "imageUrl": z.string(),
-    "logoReal": z.string(),
+    "logoReal": z.union([z.null(), z.string()]),
     "logoRealDark": z.union([z.null(), z.string()]),
-    "logoWithoutSize": z.string(),
+    "logoWithoutSize": z.union([z.null(), z.string()]),
     "name": z.string(),
     "description": z.string(),
-    "logoBackgroundLight": z.null(),
+    "logoBackgroundLight": z.union([z.null(), z.string()]),
     "logoBackgroundDark": z.union([z.null(), z.string()]),
 });
 export type JobCompany = z.infer<typeof JobCompanySchema>;
