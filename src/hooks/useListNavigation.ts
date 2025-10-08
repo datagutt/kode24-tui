@@ -9,29 +9,55 @@ interface NavigationMetrics {
 interface UseListNavigationOptions {
   selectedIndex: number;
   isActive: boolean;
-  metrics: Map<number, NavigationMetrics> | Record<string, NavigationMetrics>;
+  metrics?: Map<number, NavigationMetrics> | Record<string, NavigationMetrics>;
+  useDynamicMetrics?: boolean;
   buffer?: number;
   scrollBehavior?: 'smooth' | 'minimal';
 }
 
+const calculateDynamicMetrics = (scrollbox: ScrollBoxRenderable): Record<number, NavigationMetrics> => {
+  const metrics: Record<number, NavigationMetrics> = {};
+  const children = scrollbox.getChildren();
+  
+  let offset = 0;
+  children.forEach((child, index) => {
+    const childHeight = typeof child.height === 'number' ? child.height : 3;
+    metrics[index] = { top: offset, height: childHeight };
+    offset += childHeight;
+  });
+  
+  return metrics;
+};
+
 export const useListNavigation = ({ 
   selectedIndex, 
   isActive, 
-  metrics, 
+  metrics,
+  useDynamicMetrics = false,
   buffer = 3,
   scrollBehavior = 'minimal'
 }: UseListNavigationOptions) => {
   const scrollboxRef = useRef<ScrollBoxRenderable>(null);
   const previousIndexRef = useRef(selectedIndex);
+  const wasActiveRef = useRef(isActive);
 
   useEffect(() => {
     if (!scrollboxRef.current || !isActive) {
+      wasActiveRef.current = isActive;
       return;
     }
 
-    const itemMetrics = metrics instanceof Map 
-      ? metrics.get(selectedIndex)
-      : metrics[selectedIndex];
+    const effectiveMetrics = useDynamicMetrics 
+      ? calculateDynamicMetrics(scrollboxRef.current)
+      : metrics;
+
+    if (!effectiveMetrics) {
+      return;
+    }
+
+    const itemMetrics = effectiveMetrics instanceof Map 
+      ? effectiveMetrics.get(selectedIndex)
+      : effectiveMetrics[selectedIndex];
 
     if (!itemMetrics) {
       return;
@@ -47,9 +73,12 @@ export const useListNavigation = ({
     const viewTop = scrollTop;
     const viewBottom = scrollTop + viewportHeight;
 
+    const justBecameActive = !wasActiveRef.current && isActive;
+    wasActiveRef.current = isActive;
+
     const isFullyVisible = top >= viewTop + buffer && bottom <= viewBottom - buffer;
     
-    if (isFullyVisible) {
+    if (isFullyVisible && !justBecameActive) {
       previousIndexRef.current = selectedIndex;
       return;
     }
@@ -69,7 +98,7 @@ export const useListNavigation = ({
         : Math.max(0, top - buffer);
       scrollboxRef.current.scrollTop = targetScroll;
     }
-  }, [selectedIndex, isActive, metrics, buffer, scrollBehavior]);
+  }, [selectedIndex, isActive, metrics, useDynamicMetrics, buffer, scrollBehavior]);
 
   return scrollboxRef;
 };

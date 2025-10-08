@@ -177,61 +177,17 @@ export const FrontpagePage = ({
     [frontpageData.latestArticles, selectedArticle, frontpageSection]
   );
 
-  const leftSidebarMetrics = useMemo(() => {
-    const metrics: Record<number, { top: number; height: number }> = {};
-    const itemHeight = 4;
-    popularTags.forEach((_, index) => {
-      metrics[index] = { top: index * itemHeight, height: itemHeight };
-    });
-    return metrics;
-  }, []);
-
-  const rightSidebarMetrics = useMemo(() => {
-    const metrics: Record<number, { top: number; height: number }> = {};
-    const itemHeight = 4;
-    const jobCount = frontpageData.jobs.length;
-    const eventCount = frontpageData.events.upcomingEvents.length;
-    const commentCount = frontpageData.newestComments.length;
-    
-    let offset = 0;
-    
-    for (let i = 0; i < jobCount; i++) {
-      metrics[i] = { top: offset, height: itemHeight };
-      offset += itemHeight;
-    }
-    
-    offset += 5;
-    metrics[jobCount] = { top: offset, height: 3 };
-    offset += 3;
-    
-    offset += 3;
-    for (let i = 0; i < eventCount; i++) {
-      const index = jobCount + 1 + i;
-      metrics[index] = { top: offset, height: itemHeight };
-      offset += itemHeight;
-    }
-    
-    offset += 4;
-    for (let i = 0; i < commentCount; i++) {
-      const index = jobCount + 1 + eventCount + i;
-      metrics[index] = { top: offset, height: itemHeight };
-      offset += itemHeight;
-    }
-    
-    return metrics;
-  }, [frontpageData.jobs.length, frontpageData.events.upcomingEvents.length, frontpageData.newestComments.length]);
-
   const leftSidebarRef = useListNavigation({
     selectedIndex: selectedTagIndex,
     isActive: frontpageSection === 'left',
-    metrics: leftSidebarMetrics,
+    useDynamicMetrics: true,
     buffer: 2,
   });
 
   const rightSidebarRef = useListNavigation({
     selectedIndex: selectedSidebarIndex,
     isActive: frontpageSection === 'right',
-    metrics: rightSidebarMetrics,
+    useDynamicMetrics: true,
     buffer: 2,
   });
 
