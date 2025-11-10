@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.18",
-    "@opentui/core": "0.0.0-20251006-283f60d7",
-    "@opentui/react": "0.0.0-20251006-283f60d7",
+    "@opentui/core": "0.0.0-20251108-0c7899b1",
+    "@opentui/react": "0.0.0-20251108-0c7899b1",
     "cheerio": "^1.1.2",
     "html-entities": "^2.6.0",
     "react": "^19.2.0",
