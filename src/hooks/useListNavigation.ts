@@ -6,99 +6,120 @@ interface NavigationMetrics {
   height: number;
 }
 
+type MetricStore = Map<number, NavigationMetrics> | Record<string | number, NavigationMetrics>;
+
 interface UseListNavigationOptions {
   selectedIndex: number;
   isActive: boolean;
-  metrics?: Map<number, NavigationMetrics> | Record<string, NavigationMetrics>;
+  metrics?: MetricStore;
   useDynamicMetrics?: boolean;
   buffer?: number;
   scrollBehavior?: 'smooth' | 'minimal';
 }
 
-const calculateDynamicMetrics = (scrollbox: ScrollBoxRenderable): Record<number, NavigationMetrics> => {
-  const metrics: Record<number, NavigationMetrics> = {};
-  const children = scrollbox.getChildren();
-  
-  let offset = 0;
-  children.forEach((child, index) => {
-    const childHeight = typeof child.height === 'number' ? child.height : 3;
-    metrics[index] = { top: offset, height: childHeight };
-    offset += childHeight;
-  });
-  
-  return metrics;
+const buildDynamicMetrics = (node: ScrollBoxRenderable): Record<number, NavigationMetrics> => {
+  const children = node.getChildren();
+  const seed = { map: {} as Record<number, NavigationMetrics>, offset: 0 };
+  const result = children.reduce((state, child, index) => {
+    const height = typeof child.height === 'number' ? child.height : 3;
+    state.map[index] = { top: state.offset, height };
+    return { map: state.map, offset: state.offset + height };
+  }, seed);
+  return result.map;
 };
 
-export const useListNavigation = ({ 
-  selectedIndex, 
-  isActive, 
-  metrics,
-  useDynamicMetrics = false,
-  buffer = 3,
-  scrollBehavior = 'minimal'
-}: UseListNavigationOptions) => {
-  const scrollboxRef = useRef<ScrollBoxRenderable>(null);
-  const previousIndexRef = useRef(selectedIndex);
-  const wasActiveRef = useRef(isActive);
+const readViewportHeight = (node: ScrollBoxRenderable): number => {
+  const viewport = node.viewport?.height;
+  if (typeof viewport === 'number') {
+    return viewport;
+  }
+  if (typeof node.height === 'number') {
+    return node.height;
+  }
+  return 60;
+};
+
+const pickMetric = (store: MetricStore, index: number): NavigationMetrics | undefined => {
+  if (store instanceof Map) {
+    return store.get(index);
+  }
+  return store[index] ?? store[index.toString()];
+};
+
+const resolveMinimal = (top: number, bottom: number, viewport: number, buffer: number, scrollTop: number): number => {
+  if (top < scrollTop + buffer) {
+    return Math.max(0, top - buffer);
+  }
+  if (bottom > scrollTop + viewport - buffer) {
+    return Math.max(0, bottom - viewport + buffer);
+  }
+  return scrollTop;
+};
+
+const resolveSmooth = (top: number, bottom: number, viewport: number, buffer: number, movingDown: boolean): number => {
+  if (movingDown) {
+    return Math.max(0, bottom - viewport + buffer);
+  }
+  return Math.max(0, top - buffer);
+};
+
+export const useListNavigation = (options: UseListNavigationOptions) => {
+  const scrollRef = useRef<ScrollBoxRenderable>(null);
+  const prevIndexRef = useRef(options.selectedIndex);
+  const activeRef = useRef(options.isActive);
+  const buffer = options.buffer ?? 3;
+  const behavior = options.scrollBehavior ?? 'minimal';
+  const dynamic = options.useDynamicMetrics === true;
 
   useEffect(() => {
-    if (!scrollboxRef.current || !isActive) {
-      wasActiveRef.current = isActive;
+    const node = scrollRef.current;
+    if (!node) {
+      activeRef.current = options.isActive;
+      return;
+    }
+    if (!options.isActive) {
+      activeRef.current = false;
       return;
     }
 
-    const effectiveMetrics = useDynamicMetrics 
-      ? calculateDynamicMetrics(scrollboxRef.current)
-      : metrics;
-
-    if (!effectiveMetrics) {
+    const store = dynamic ? buildDynamicMetrics(node) : options.metrics;
+    if (!store) {
       return;
     }
 
-    const itemMetrics = effectiveMetrics instanceof Map 
-      ? effectiveMetrics.get(selectedIndex)
-      : effectiveMetrics[selectedIndex];
-
-    if (!itemMetrics) {
+    const metric = pickMetric(store, options.selectedIndex);
+    if (!metric) {
       return;
     }
 
-    const scrollTop = scrollboxRef.current.scrollTop ?? 0;
-    const viewportHeight = typeof scrollboxRef.current.height === 'number' 
-      ? scrollboxRef.current.height 
-      : 60;
+    const viewport = readViewportHeight(node);
+    const scrollTop = node.scrollTop ?? 0;
+    const top = metric.top;
+    const bottom = metric.top + metric.height;
+    const justActivated = !activeRef.current;
+    activeRef.current = true;
 
-    const top = itemMetrics.top;
-    const bottom = itemMetrics.top + itemMetrics.height;
-    const viewTop = scrollTop;
-    const viewBottom = scrollTop + viewportHeight;
-
-    const justBecameActive = !wasActiveRef.current && isActive;
-    wasActiveRef.current = isActive;
-
-    const isFullyVisible = top >= viewTop + buffer && bottom <= viewBottom - buffer;
-    
-    if (isFullyVisible && !justBecameActive) {
-      previousIndexRef.current = selectedIndex;
+    const viewTop = scrollTop + buffer;
+    const viewBottom = scrollTop + viewport - buffer;
+    const fullyVisible = top >= viewTop && bottom <= viewBottom;
+    if (fullyVisible && !justActivated) {
+      prevIndexRef.current = options.selectedIndex;
       return;
     }
 
-    const movingDown = selectedIndex > previousIndexRef.current;
-    previousIndexRef.current = selectedIndex;
+    const movingDown = options.selectedIndex > prevIndexRef.current;
+    prevIndexRef.current = options.selectedIndex;
 
-    if (scrollBehavior === 'minimal') {
-      if (top < viewTop + buffer) {
-        scrollboxRef.current.scrollTop = Math.max(0, top - buffer);
-      } else if (bottom > viewBottom - buffer) {
-        scrollboxRef.current.scrollTop = Math.max(0, bottom - viewportHeight + buffer);
-      }
-    } else {
-      const targetScroll = movingDown
-        ? Math.max(0, bottom - viewportHeight + buffer)
-        : Math.max(0, top - buffer);
-      scrollboxRef.current.scrollTop = targetScroll;
+    const target = behavior === 'minimal'
+      ? resolveMinimal(top, bottom, viewport, buffer, scrollTop)
+      : resolveSmooth(top, bottom, viewport, buffer, movingDown);
+
+    if (target === scrollTop) {
+      return;
     }
-  }, [selectedIndex, isActive, metrics, useDynamicMetrics, buffer, scrollBehavior]);
 
-  return scrollboxRef;
+    node.scrollTop = target;
+  }, [options.selectedIndex, options.isActive, options.metrics, dynamic, buffer, behavior]);
+
+  return scrollRef;
 };

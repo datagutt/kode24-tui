@@ -55,6 +55,7 @@ export const translations: Record<string, string> = {
   pressEnter: "Trykk Enter for å se detaljer",
   pressEnterToRead: "Trykk Enter for å lese",
   pressEnterViewArticles: "Trykk Enter for å se artikler",
+  returnToFrontpage: "Til forsiden",
 
   // General UI
   loadingFrontpage: "Laster kode24.no forside...",

@@ -1,8 +1,7 @@
 import React from "react";
 import type { Page } from "../types/index.js";
-import { themeColors } from "../theme/colors.js";
 import { t } from "../i18n/index.js";
-import { RGBA } from "@opentui/core";
+import { useTheme } from "../hooks/useTheme.js";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,76 +9,79 @@ interface LayoutProps {
   breadcrumb: string[];
 }
 
-export const Layout = ({ children, currentPage, breadcrumb }: LayoutProps) => {
-  const getPageTitle = (page: Page): string => {
-    switch (page) {
-      case "frontpage":
-        return "🏠 Frontpage";
-      case "article":
-        return "📰 Article";
-      case "listings":
-        return "💼 Job Listings";
-      case "events":
-        return "📅 Events";
-      default:
-        return "📱 kode24.no";
-    }
-  };
+const pageLabel = (page: Page): string => {
+  switch (page) {
+    case "frontpage":
+      return "🏠 Frontpage";
+    case "article":
+      return "📰 Article";
+    case "listings":
+      return "💼 Listings";
+    case "events":
+      return "📅 Events";
+    default:
+      return "📱 kode24";
+  }
+};
 
-  const getBreadcrumbText = (): string => {
-    if (breadcrumb.length <= 1) return getPageTitle(currentPage);
-    return breadcrumb.map((page) => getPageTitle(page as Page)).join(" > ");
-  };
+export const Layout = ({ children, currentPage, breadcrumb }: LayoutProps) => {
+  const theme = useTheme();
+  const now = new Date().toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" });
+  const trail = breadcrumb.length > 1
+    ? breadcrumb.map((item) => pageLabel(item as Page)).join(" › ")
+    : pageLabel(currentPage);
 
   return (
     <box
-      alignItems="center"
-      justifyContent="center"
-      flexGrow={1}
-      flexDirection="column"
-      height="100%"
-      width="100%"
+      style={{
+        flexDirection: "column",
+        width: "100%",
+        height: "100%",
+        backgroundColor: theme.colors.background.base,
+      }}
     >
-      {/* Header */}
       <box
-        height={3}
-        width="100%"
-        backgroundColor={themeColors.header.background}
-        flexDirection="column"
-        padding={3}
+        style={{
+          height: 3,
+          width: "100%",
+          padding: 1,
+          border: true,
+          borderColor: theme.colors.border.subtle,
+          backgroundColor: theme.colors.background.highlight,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
       >
-        <box alignItems="center" justifyContent="center" flexDirection="column">
-          <ascii-font
-            text={t("headerTitle")}
-            fg={RGBA.fromHex(themeColors.header.text)}
-            marginBottom={1.5}
-          />
-          <text
-            content={getBreadcrumbText()}
-            style={{ fg: themeColors.header.accent }}
-          />
-        </box>
+        <text content={t("headerTitle")} style={{ fg: theme.colors.text.primary, attributes: 1 }} />
+        <text content={trail} style={{ fg: theme.colors.text.secondary }} />
+        <text content={now} style={{ fg: theme.colors.text.accent }} />
       </box>
 
-      {/* Main content */}
-      <box flexGrow={1} flexDirection="column" height="100%" width="100%">
+      <box
+        style={{
+          flexGrow: 1,
+          padding: 1,
+          width: "100%",
+          height: "100%",
+        }}
+      >
         {children}
       </box>
 
-      {/* Footer */}
       <box
         style={{
           height: 2,
           width: "100%",
-          backgroundColor: themeColors.footer.background,
+          backgroundColor: theme.colors.background.highlight,
+          border: true,
+          borderColor: theme.colors.border.subtle,
           alignItems: "center",
           justifyContent: "center",
+          padding: 1,
         }}
       >
-        <text
-          content={t("footerHelp")}
-          style={{ fg: themeColors.footer.text }}
-        />
+        <text content={t("footerHelp")} style={{ fg: theme.colors.text.secondary }} />
       </box>
     </box>
   );

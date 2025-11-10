@@ -7,6 +7,8 @@ import { t } from "../i18n/index.js";
 import { JobCard } from "../components/JobCard.js";
 import { ArticleCard } from "../components/ArticleCard.js";
 import { popularTags } from "./TagsPage.js";
+import ScrollSurface from "../components/ScrollSurface.js";
+import { getRightSidebarCounts } from "./rightSidebarConfig.js";
 
 type FrontpageArticle = Frontpage["latestArticles"][number];
 type FrontpageSection = Frontpage["frontpage"][number];
@@ -144,7 +146,7 @@ export const FrontpagePage = ({
   );
 
   const metrics = useMemo(() => {
-    const articleOffsets: Record<string, { top: number; height: number }> = {};
+    const articleOffsets = new Map<number, { top: number; height: number }>();
     const sectionOffsets = new Map<number, { top: number; height: number }>();
     let offset = 0;
     contentBlocks.forEach((block) => {
@@ -152,14 +154,14 @@ export const FrontpagePage = ({
       offset += blockHeaderHeight;
       if (block.type === "articles") {
         const rowHeight = block.chunkIndex === 0 ? heroRowHeight : compactRowHeight;
-        block.articles.forEach((article) => {
-          articleOffsets[article.id] = { top: offset, height: rowHeight };
+        block.articles.forEach((article, index) => {
+          const globalIndex = block.startIndex + index;
+          articleOffsets.set(globalIndex, { top: offset, height: rowHeight });
           offset += rowHeight;
         });
       } else {
         const items = clampSectionArticles(block.section);
         items.forEach((article) => {
-          articleOffsets[article.id] = { top: offset, height: sectionRowHeight };
           offset += sectionRowHeight;
         });
         sectionOffsets.set(block.sectionIndex, {
@@ -210,6 +212,29 @@ export const FrontpagePage = ({
     return new Date(parsed).toLocaleDateString();
   };
 
+  const rightSidebarCounts = useMemo(() => getRightSidebarCounts(frontpageData), [
+    frontpageData.jobs.length,
+    frontpageData.events.upcomingEvents.length,
+    frontpageData.newestComments.length,
+  ]);
+
+  const visibleJobs = useMemo(
+    () => frontpageData.jobs.slice(0, rightSidebarCounts.jobs),
+    [frontpageData.jobs, rightSidebarCounts.jobs]
+  );
+  const visibleEvents = useMemo(
+    () => frontpageData.events.upcomingEvents.slice(0, rightSidebarCounts.events),
+    [frontpageData.events.upcomingEvents, rightSidebarCounts.events]
+  );
+  const visibleComments = useMemo(
+    () => frontpageData.newestComments.slice(0, rightSidebarCounts.comments),
+    [frontpageData.newestComments, rightSidebarCounts.comments]
+  );
+
+  const viewAllIndex = rightSidebarCounts.jobs;
+  const eventBaseIndex = viewAllIndex + 1;
+  const commentBaseIndex = eventBaseIndex + rightSidebarCounts.events;
+
   return (
     <box
       style={{
@@ -244,16 +269,15 @@ export const FrontpagePage = ({
         style={{
           flexDirection: "row",
           width: "100%",
-          height: "100%",
+          flexGrow: 1,
         }}
       >
         {/* Left Sidebar */}
         <box
           style={{
-            width: "20%",
+            width: "22%",
             backgroundColor: themeColors.navigation.background,
             flexDirection: "column",
-            padding: 1,
             marginRight: 1,
           }}
         >
@@ -261,16 +285,11 @@ export const FrontpagePage = ({
             content={t("categoriesTags")}
             style={{ fg: themeColors.navigation.normal, attributes: 1 }}
           />
-          <scrollbox
+          <ScrollSurface
             ref={leftSidebarRef}
-            style={{
-              height: "100%",
-              border: true,
-              borderColor: frontpageSection === 'left' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-              backgroundColor: frontpageSection === 'left' ? themeColors.navigation.selected : 'transparent',
-              padding: 1,
-              marginTop: 1,
-            }}
+            variant="sidebar"
+            focused={frontpageSection === 'left'}
+            width="100%"
           >
             {popularTags.map((tag, index) => {
               const isSelected = frontpageSection === 'left' && index === selectedTagIndex;
@@ -289,34 +308,31 @@ export const FrontpagePage = ({
                   <text
                     content={`${isActiveFilter ? '🏷️ ' : ''}#${tag.name}`}
                     style={{ 
-                      fg: isSelected ? themeColors.navigation.background : isActiveFilter ? themeColors.tag.name : themeColors.tag.name, 
+                      fg: isSelected ? themeColors.navigation.background : themeColors.tag.name, 
                       attributes: isActiveFilter ? 1 : 0
                     }}
                   />
                 </box>
               );
             })}
-          </scrollbox>
+          </ScrollSurface>
         </box>
 
         {/* Middle Section */}
         <box
           style={{
             flexDirection: "column",
-            width: "60%",
+            width: "56%",
             marginLeft: 1,
             marginRight: 1,
           }}
         >
-          <scrollbox
+          <ScrollSurface
             ref={middleSectionRef}
-            style={{
-              height: "100%",
-              border: true,
-              borderColor: frontpageSection === 'middle' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-              backgroundColor: frontpageSection === 'middle' ? themeColors.navigation.selected : 'transparent',
-              padding: 1,
-            }}
+            focused={frontpageSection === 'middle'}
+            variant="panel"
+            padding={2}
+            width="100%"
           >
             {contentBlocks.length === 0 && selectedTagFilter ? (
               <box
@@ -472,16 +488,15 @@ export const FrontpagePage = ({
                 );
               })
             )}
-          </scrollbox>
+          </ScrollSurface>
         </box>
 
         {/* Right Sidebar */}
         <box
           style={{
-            width: "20%",
+            width: "22%",
             backgroundColor: themeColors.navigation.background,
             flexDirection: "column",
-            padding: 1,
             marginLeft: 1,
           }}
         >
@@ -489,18 +504,14 @@ export const FrontpagePage = ({
             content={t("jobsEvents")}
             style={{ fg: themeColors.navigation.normal, attributes: 1 }}
           />
-          <scrollbox
-            style={{
-              height: "100%",
-              border: true,
-              borderColor: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-              backgroundColor: frontpageSection === 'right' ? themeColors.navigation.selected : 'transparent',
-              padding: 1,
-              marginTop: 1,
-            }}
+          <ScrollSurface
+            ref={rightSidebarRef}
+            variant="sidebar"
+            focused={frontpageSection === 'right'}
+            width="100%"
           >
             {/* Jobs */}
-            {frontpageData.jobs.slice(0, 3).map((job, index) => {
+            {visibleJobs.map((job, index) => {
               const isSelected = frontpageSection === 'right' && index === selectedSidebarIndex;
               return (
                 <JobCard
@@ -518,14 +529,14 @@ export const FrontpagePage = ({
                 marginBottom: 2,
                 padding: 1,
                 border: true,
-                borderColor: frontpageSection === 'right' && selectedSidebarIndex === frontpageData.jobs.length ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-                backgroundColor: frontpageSection === 'right' && selectedSidebarIndex === frontpageData.jobs.length ? themeColors.navigation.selectedText : colors.surface.card,
+                borderColor: frontpageSection === 'right' && selectedSidebarIndex === viewAllIndex ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+                backgroundColor: frontpageSection === 'right' && selectedSidebarIndex === viewAllIndex ? themeColors.navigation.selectedText : colors.surface.card,
               }}
             >
               <text
                 content={`→ ${t("viewAllJobs")}`}
                 style={{
-                  fg: frontpageSection === 'right' && selectedSidebarIndex === frontpageData.jobs.length ? themeColors.navigation.background : themeColors.navigation.normal,
+                  fg: frontpageSection === 'right' && selectedSidebarIndex === viewAllIndex ? themeColors.navigation.background : themeColors.navigation.normal,
                   attributes: 1,
                 }}
               />
@@ -536,8 +547,8 @@ export const FrontpagePage = ({
               content={t("upcomingEvents")}
               style={{ fg: themeColors.navigation.normal, attributes: 1, marginBottom: 1 }}
             />
-            {frontpageData.events.upcomingEvents.slice(0, 2).map((event, index) => {
-              const eventIndex = frontpageData.jobs.length + 1 + index;
+            {visibleEvents.map((event, index) => {
+              const eventIndex = eventBaseIndex + index;
               const isSelected = frontpageSection === 'right' && eventIndex === selectedSidebarIndex;
               return (
                 <box
@@ -565,8 +576,8 @@ export const FrontpagePage = ({
               content={t("newestComments")}
               style={{ fg: themeColors.navigation.normal, attributes: 1, marginTop: 2, marginBottom: 1 }}
             />
-            {frontpageData.newestComments.slice(0, 2).map((comment, index) => {
-              const commentIndex = frontpageData.jobs.length + 1 + frontpageData.events.upcomingEvents.length + index;
+            {visibleComments.map((comment, index) => {
+              const commentIndex = commentBaseIndex + index;
               const isSelected = frontpageSection === 'right' && commentIndex === selectedSidebarIndex;
               return (
                 <box
@@ -588,7 +599,7 @@ export const FrontpagePage = ({
                 </box>
               );
             })}
-          </scrollbox>
+          </ScrollSurface>
         </box>
       </box>
     </box>

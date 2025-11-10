@@ -4,6 +4,7 @@ import type { ScrollBoxRenderable } from '@opentui/core';
 import { t } from '../i18n/index.js';
 import { useTheme } from '../hooks/useTheme.js';
 import { JobCard } from '../components/JobCard.js';
+import ScrollSurface from '../components/ScrollSurface.js';
 
 interface ListingsPageProps {
   initialJobs?: Job[];
@@ -85,7 +86,12 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
       </box>
 
       {/* Jobs List */}
-      <scrollbox ref={scrollboxRef} style={{ height: "100%", width: "100%" }}>
+      <ScrollSurface
+        ref={scrollboxRef}
+        variant="panel"
+        focused
+        width="100%"
+      >
         {filteredJobs.length === 0 ? (
           <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
             <text content={t('noJobsFound')} style={{ fg: 'yellow' }} />
@@ -103,7 +109,7 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
             ))}
           </box>
         )}
-      </scrollbox>
+      </ScrollSurface>
 
       {/* Footer */}
       <box style={{ border: true, padding: 1, marginTop: 1 }}>

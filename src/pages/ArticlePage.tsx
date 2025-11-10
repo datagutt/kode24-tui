@@ -5,6 +5,7 @@ import { useScrollboxFocus } from '../hooks/useScrollboxFocus.js';
 import { convertHTMLToOpenTUI } from '../utils/htmlToOpenTUI.js';
 import type { Lab } from '../types/index.js';
 import { t } from '../i18n/index.js';
+import ScrollSurface from '../components/ScrollSurface.js';
 
 interface ArticlePageProps {
   articleId: string;
@@ -109,7 +110,13 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
           )}
         </box>
 
-        <scrollbox ref={scrollboxRef} style={{ height: "100%", border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.raised, padding: 2, marginTop: 1 }}>
+        <ScrollSurface
+          ref={scrollboxRef}
+          variant="panel"
+          focused
+          padding={2}
+          width="100%"
+        >
           <text content={t('articleContent')} style={{ fg: theme.article.subtitle, attributes: 1, marginBottom: 1 }} />
           {article.page.fields?.bodytext ? (
             <box style={{ flexDirection: "column" }}>
@@ -121,45 +128,47 @@ export const ArticlePage = ({ articleId, onBack }: ArticlePageProps) => {
               <text content={t('paywallOrFormatting')} style={{ fg: theme.colors.text.muted }} />
             </box>
           )}
-        </scrollbox>
+        </ScrollSurface>
       </box>
 
       <box style={{ flexDirection: "column", width: "35%" }}>
-        <box style={{ border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 1 }}>
-          <text content={t('articleOverview')} style={{ fg: theme.article.title, attributes: 1 }} />
-          <text content={`${t('articleIdLabel')} ${article.page.id}`} style={{ fg: theme.colors.text.secondary, marginTop: 1 }} />
-          <text content={`${t('articleTypeLabel')} ${article.page.type}`} style={{ fg: theme.colors.text.secondary }} />
-          <text content={`${t('articleStatusLabel')} ${article.page.status}`} style={{ fg: theme.colors.text.secondary }} />
-          {shareUrl && (
-            <text content={`${t('articleUrl')} ${shareUrl}`} style={{ fg: theme.colors.text.accent, marginTop: 1 }} />
-          )}
-        </box>
+        <ScrollSurface variant="sidebar" sticky stickyStart="top" width="100%">
+          <box style={{ border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 1 }}>
+            <text content={t('articleOverview')} style={{ fg: theme.article.title, attributes: 1 }} />
+            <text content={`${t('articleIdLabel')} ${article.page.id}`} style={{ fg: theme.colors.text.secondary, marginTop: 1 }} />
+            <text content={`${t('articleTypeLabel')} ${article.page.type}`} style={{ fg: theme.colors.text.secondary }} />
+            <text content={`${t('articleStatusLabel')} ${article.page.status}`} style={{ fg: theme.colors.text.secondary }} />
+            {shareUrl && (
+              <text content={`${t('articleUrl')} ${shareUrl}`} style={{ fg: theme.colors.text.accent, marginTop: 1 }} />
+            )}
+          </box>
 
-        <box style={{ border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 1, marginTop: 1 }}>
-          <text content={t('readingStats')} style={{ fg: theme.article.title, attributes: 1 }} />
-          {readTime && (
-            <text content={`${t('readTimeLabel')} ${readTime} ${t('minutes')}`} style={{ fg: theme.colors.text.secondary, marginTop: 1 }} />
-          )}
-          {wordCount && (
-            <text content={`${t('wordCountLabel')} ${wordCount}`} style={{ fg: theme.colors.text.secondary }} />
-          )}
-          {charCount && (
-            <text content={`${t('charCountLabel')} ${charCount}`} style={{ fg: theme.colors.text.secondary }} />
-          )}
-        </box>
+          <box style={{ border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 1, marginTop: 1 }}>
+            <text content={t('readingStats')} style={{ fg: theme.article.title, attributes: 1 }} />
+            {readTime && (
+              <text content={`${t('readTimeLabel')} ${readTime} ${t('minutes')}`} style={{ fg: theme.colors.text.secondary, marginTop: 1 }} />
+            )}
+            {wordCount && (
+              <text content={`${t('wordCountLabel')} ${wordCount}`} style={{ fg: theme.colors.text.secondary }} />
+            )}
+            {charCount && (
+              <text content={`${t('charCountLabel')} ${charCount}`} style={{ fg: theme.colors.text.secondary }} />
+            )}
+          </box>
 
-        <box style={{ border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 1, marginTop: 1 }}>
-          <text content={t('actions')} style={{ fg: theme.article.title, attributes: 1 }} />
-          <text content={`↵ ${t('returnToFrontpage')}`} style={{ fg: theme.colors.text.muted, marginTop: 1 }} />
-          <text content={`Esc ${t('pressEscToGoBack')}`} style={{ fg: theme.colors.text.muted }} />
-        </box>
+          <box style={{ border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 1, marginTop: 1 }}>
+            <text content={t('actions')} style={{ fg: theme.article.title, attributes: 1 }} />
+            <text content={`↵ ${t('returnToFrontpage')}`} style={{ fg: theme.colors.text.muted, marginTop: 1 }} />
+            <text content={`Esc ${t('pressEscToGoBack')}`} style={{ fg: theme.colors.text.muted }} />
+          </box>
 
-        <box style={{ border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 1, marginTop: 1 }}>
-          <text content={t('developmentInfo')} style={{ fg: theme.article.title, attributes: 1 }} />
-          <text content={`API keys: ${Object.keys(article).join(', ')}`} style={{ fg: theme.colors.text.secondary, marginTop: 1 }} />
-          <text content={`${t('articleTemplateLabel')} ${article.page.fields?.page_template_alias ?? '—'}`} style={{ fg: theme.colors.text.secondary }} />
-          <text content={`${t('articleSiteLabel')} ${article.page.site_id}`} style={{ fg: theme.colors.text.secondary }} />
-        </box>
+          <box style={{ border: true, borderColor: theme.colors.border.subtle, backgroundColor: theme.colors.surface.card, padding: 1, marginTop: 1 }}>
+            <text content={t('developmentInfo')} style={{ fg: theme.article.title, attributes: 1 }} />
+            <text content={`API keys: ${Object.keys(article).join(', ')}`} style={{ fg: theme.colors.text.secondary, marginTop: 1 }} />
+            <text content={`${t('articleTemplateLabel')} ${article.page.fields?.page_template_alias ?? '—'}`} style={{ fg: theme.colors.text.secondary }} />
+            <text content={`${t('articleSiteLabel')} ${article.page.site_id}`} style={{ fg: theme.colors.text.secondary }} />
+          </box>
+        </ScrollSurface>
       </box>
     </box>
   );

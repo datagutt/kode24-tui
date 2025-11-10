@@ -1,5 +1,6 @@
 import type { KeyEvent, Frontpage, Page } from '../types/index.js';
 import { popularTags } from './TagsPage.js';
+import { getRightSidebarCounts, getRightSidebarTotal, getRightSidebarItemType } from './rightSidebarConfig.js';
 
 interface NavigationState {
   selectedIndex: number;
@@ -164,21 +165,28 @@ const handleRightSidebar = (
   updateSelection: (selectedIndex: number, selectedSection?: number, frontpageSection?: 'left' | 'middle' | 'right') => void,
   onNavigateToPage: (page: Page) => void
 ): boolean => {
-  const totalItems = frontpageData.jobs.length + frontpageData.events.upcomingEvents.length + frontpageData.newestComments.length + 1;
+  const counts = getRightSidebarCounts(frontpageData);
+  const totalItems = getRightSidebarTotal(counts);
+  const maxIndex = Math.max(totalItems - 1, 0);
 
   if (key.name === 'up' && navigation.selectedIndex > 0) {
     updateSelection(navigation.selectedIndex - 1, navigation.selectedSection, 'right');
     return true;
   }
 
-  if (key.name === 'down' && navigation.selectedIndex < totalItems - 1) {
+  if (key.name === 'down' && navigation.selectedIndex < maxIndex) {
     updateSelection(navigation.selectedIndex + 1, navigation.selectedSection, 'right');
     return true;
   }
 
   if (key.name === 'return') {
-    if (navigation.selectedIndex < frontpageData.jobs.length || navigation.selectedIndex === totalItems - 1) {
+    const clampedIndex = Math.min(navigation.selectedIndex, maxIndex);
+    const type = getRightSidebarItemType(clampedIndex, counts);
+    if (type === 'job' || type === 'viewAll') {
       onNavigateToPage('listings');
+    }
+    if (type === 'event') {
+      onNavigateToPage('events');
     }
     return true;
   }
