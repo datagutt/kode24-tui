@@ -247,6 +247,24 @@ export const FrontpageElementSchema = z.object({
 });
 export type FrontpageElement = z.infer<typeof FrontpageElementSchema>;
 
+// Schema for the OLD API (docs.kode24.no/api/frontpage) - no longer has frontpage sections
+export const OldFrontpageApiSchema = z.object({
+    "latestArticles": z.array(ArticleSchema),
+    "listing": ListingSchema,
+    "content": z.array(ContentSchema),
+    "events": EventsSchema,
+    "partners": z.array(PartnerSchema),
+    "newestComments": z.array(NewestCommentSchema),
+    "companyPartners": z.array(CompanyPartnerSchema),
+    "contentTiles": z.array(BannerAdSchema),
+    "jobs": z.array(JobSchema),
+    "jobAdsSanity": z.array(JobAdsSanitySchema),
+    "partnerAdsSanity": z.array(PartnerAdsSanitySchema),
+    "bannerAds": z.array(BannerAdSchema),
+});
+export type OldFrontpageApi = z.infer<typeof OldFrontpageApiSchema>;
+
+// Combined Frontpage type used by the app (merges old + new API data)
 export const FrontpageSchema = z.object({
     "latestArticles": z.array(ArticleSchema),
     "frontpage": z.array(FrontpageElementSchema),
