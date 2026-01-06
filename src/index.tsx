@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { render } from '@opentui/react';
+import { createRoot } from '@opentui/react';
+import { createCliRenderer } from '@opentui/core';
 import { api } from './services/api.js';
 import { useNavigation } from './hooks/useNavigation.js';
 import { useKeyboardHandler } from './hooks/useKeyboardHandler.js';
@@ -161,7 +162,7 @@ export const App = () => {
 
   const renderCurrentPage = () => {
     switch (navigation.currentPage) {
-      case 'frontpage':
+      case 'frontpage': {
         const activeData = filteredFrontpageData || frontpageData;
         const maxArticleIndex = Math.max(0, activeData.latestArticles.length - 1);
         const safeSelectedArticle = Math.min(navigation.selectedIndex, maxArticleIndex);
@@ -179,6 +180,7 @@ export const App = () => {
             onNavigateToListings={() => navigateToPage('listings')}
           />
         );
+      }
       
       case 'article':
         return currentArticleId ? (
@@ -230,4 +232,5 @@ export const App = () => {
   );
 };
 
-render(<App />);
+const renderer = await createCliRenderer();
+createRoot(renderer).render(<App />);
