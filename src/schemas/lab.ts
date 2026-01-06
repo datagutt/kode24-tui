@@ -1,12 +1,12 @@
 import * as z from "zod";
 
-export const TeAliasSchema = z.enum(["kode24"]);
+export const TeAliasSchema = z.enum(["kode24", ""]);
 export type TeAlias = z.infer<typeof TeAliasSchema>;
 
-export const SectionSchema = z.enum(["artikkel"]);
+export const SectionSchema = z.enum(["artikkel", ""]);
 export type Section = z.infer<typeof SectionSchema>;
 
-export const TypeSchema = z.enum(["article"]);
+export const TypeSchema = z.enum(["article", ""]);
 export type Type = z.infer<typeof TypeSchema>;
 
 export const TitleStyleJsonSchema = z.object({
@@ -158,7 +158,7 @@ export const ResultSchema = z.object({
   byline: z.string(),
   bylineImage: z.string(),
   paywall: z.boolean(),
-  published: z.coerce.date(),
+  published: z.preprocess((val) => (val === "" ? new Date(0) : val), z.coerce.date()),
   url: z.string(),
   site_alias: TeAliasSchema,
   site_id: z.string(),

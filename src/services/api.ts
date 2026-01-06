@@ -48,7 +48,7 @@ function transformResultToArticle(result: z.infer<typeof ResultSchema>): Article
     id: String(result.id),
     title: result.title,
     published: result.published,
-    section: result.section,
+    section: result.section || "artikkel",
     image: result.images[0]?.url ?? "",
     published_url: result.url,
     tags: result.tags.join(", "),

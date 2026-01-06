@@ -3,6 +3,7 @@ import * as z from "zod";
 
 export const SectionSchema = z.enum([
     "artikkel",
+    "",
 ]);
 export type Section = z.infer<typeof SectionSchema>;
 
