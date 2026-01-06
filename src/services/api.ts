@@ -44,8 +44,10 @@ const NewFrontpageSchema = z.object({
 
 // Transform a lab Result to an Article format
 function transformResultToArticle(result: z.infer<typeof ResultSchema>): Article {
+  // Extract article ID from URL (last segment)
+  const urlId = result.url.split("/").pop() ?? String(result.id);
   return {
-    id: String(result.id),
+    id: urlId,
     title: result.title,
     published: result.published,
     section: result.section || "artikkel",
@@ -53,7 +55,7 @@ function transformResultToArticle(result: z.infer<typeof ResultSchema>): Article
     published_url: result.url,
     tags: result.tags.join(", "),
     subtitle: result.teaserSubtitle || result.description,
-    oldId: String(result.id),
+    oldId: urlId,
     frontCropUrl: result.images[0]?.url ?? "",
     byline: {
       imageUrl: result.bylineImage,
@@ -92,8 +94,11 @@ export const api = {
     const oldData = oldApiResult.data!;
     const newData = newApiResult.data!;
 
-    // Transform new API results to Article format
-    const articles = (newData.result ?? []).map(transformResultToArticle);
+    // Transform new API results to Article format, filter out non-kode24 and future articles
+    const now = new Date();
+    const articles = (newData.result ?? [])
+      .filter((r) => new URL(r.url).hostname.endsWith("kode24.no") && r.published <= now)
+      .map(transformResultToArticle);
 
     // Merge: use articles from new API, everything else from old API
     return {
