@@ -9,20 +9,6 @@ import ScrollSurface from "../components/ScrollSurface.js";
 import { getRightSidebarCounts } from "./rightSidebarConfig.js";
 
 type FrontpageArticle = Frontpage["latestArticles"][number];
-type FrontpageSection = Frontpage["frontpage"][number];
-
-type ContentBlock =
-  | {
-      type: "articles";
-      articles: FrontpageArticle[];
-      chunkIndex: number;
-      startIndex: number;
-    }
-  | {
-      type: "section";
-      section: FrontpageSection;
-      sectionIndex: number;
-    };
 
 interface FrontpagePageProps {
   frontpageData: Frontpage;
@@ -35,177 +21,76 @@ interface FrontpagePageProps {
   onNavigateToListings: () => void;
 }
 
+// Flattened item type for the middle section
+type FlatItem = 
+  | { type: 'header'; text: string; key: string }
+  | { type: 'article'; article: FrontpageArticle; globalIndex: number; variant: 'default' | 'compact'; key: string };
+
 export const FrontpagePage = ({
   frontpageData,
-  selectedSection,
   selectedArticle,
   frontpageSection,
   selectedSidebarIndex = 0,
   selectedTagFilter,
-  onNavigateToArticle,
-  onNavigateToListings,
 }: FrontpagePageProps) => {
 
-  const chunkPattern = [3, 2] as const;
-  const totalSections = frontpageData.frontpage.length;
-
-  const clampSectionArticles = (
-    section: FrontpageSection
-  ): FrontpageArticle[] => {
-    const parsed = Number.parseInt(section.antall, 10);
-    const limit = Number.isNaN(parsed)
-      ? section.articles.length
-      : parsed;
-    return section.articles.slice(0, limit);
+  const formatArticleDate = (value: Date | string): string => {
+    if (value instanceof Date) return value.toLocaleDateString();
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? value : new Date(parsed).toLocaleDateString();
   };
 
-  const heroRowHeight = 7;
-  const compactRowHeight = 5;
-  const sectionRowHeight = 5;
-  const blockHeaderHeight = 2;
-  const blockGapHeight = 1;
-
-  const buildContentBlocks = (
-    articles: FrontpageArticle[],
-    sections: FrontpageSection[],
-    pattern: readonly number[],
-    chunkIndex = 0,
-    startIndex = 0,
-    acc: ContentBlock[] = []
-  ): ContentBlock[] => {
-    if (articles.length === 0) {
-      if (sections.length === 0) {
-        return acc;
-      }
-      const [nextSection, ...restSections] = sections;
-      const sectionIndex = totalSections - sections.length;
-      const nextAcc: ContentBlock[] = [
-        ...acc,
-        { type: "section", section: nextSection, sectionIndex },
-      ];
-      return buildContentBlocks(
-        articles,
-        restSections,
-        pattern,
-        chunkIndex,
-        startIndex,
-        nextAcc
-      );
-    }
-
-    const size = pattern[chunkIndex % pattern.length];
-    const chunk = articles.slice(0, size);
-    const remainingArticles = articles.slice(chunk.length);
-    const chunkBlock: ContentBlock = {
-      type: "articles",
-      articles: chunk,
-      chunkIndex,
-      startIndex,
-    };
-    const nextAcc = [...acc, chunkBlock];
-
-    if (chunkIndex !== 0 && sections.length > 0) {
-      const [nextSection, ...restSections] = sections;
-      const sectionIndex = totalSections - sections.length;
-      const withSection: ContentBlock[] = [
-        ...nextAcc,
-        { type: "section", section: nextSection, sectionIndex },
-      ];
-      return buildContentBlocks(
-        remainingArticles,
-        restSections,
-        pattern,
-        chunkIndex + 1,
-        startIndex + chunk.length,
-        withSection
-      );
-    }
-
-    return buildContentBlocks(
-      remainingArticles,
-      sections,
-      pattern,
-      chunkIndex + 1,
-      startIndex + chunk.length,
-      nextAcc
-    );
-  };
-
-  const contentBlocks = useMemo(
-    () =>
-      buildContentBlocks(
-        frontpageData.latestArticles,
-        frontpageData.frontpage,
-        chunkPattern
-      ),
-    [frontpageData.frontpage, frontpageData.latestArticles]
-  );
-
-  const metrics = useMemo(() => {
-    const articleOffsets = new Map<number, { top: number; height: number }>();
-    const sectionOffsets = new Map<number, { top: number; height: number }>();
-    let offset = 0;
-    contentBlocks.forEach((block) => {
-      const blockStart = offset;
-      offset += blockHeaderHeight;
-      if (block.type === "articles") {
-        const rowHeight = block.chunkIndex === 0 ? heroRowHeight : compactRowHeight;
-        block.articles.forEach((article, index) => {
-          const globalIndex = block.startIndex + index;
-          articleOffsets.set(globalIndex, { top: offset, height: rowHeight });
-          offset += rowHeight;
-        });
-      } else {
-        const items = clampSectionArticles(block.section);
-        items.forEach((article) => {
-          offset += sectionRowHeight;
-        });
-        sectionOffsets.set(block.sectionIndex, {
-          top: blockStart,
-          height: offset - blockStart,
-        });
-      }
-      offset += blockGapHeight;
+  // Build a flat list of items for the middle section
+  // Each article is a direct item, headers are separate items (but not navigable)
+  const flatItems = useMemo((): FlatItem[] => {
+    const items: FlatItem[] = [];
+    const articles = frontpageData.latestArticles;
+    
+    // Add header for latest articles
+    const headerText = selectedTagFilter 
+      ? `Articles tagged with #${selectedTagFilter}`
+      : t("latestArticles");
+    items.push({ type: 'header', text: headerText, key: 'header-latest' });
+    
+    // Add all articles in a flat list
+    articles.forEach((article, index) => {
+      // First 3 are "hero" style, rest are compact
+      const variant = index < 3 ? 'default' : 'compact';
+      items.push({ 
+        type: 'article', 
+        article, 
+        globalIndex: index, 
+        variant,
+        key: article.id 
+      });
     });
-    return { articleOffsets, sectionOffsets };
-  }, [contentBlocks]);
+    
+    return items;
+  }, [frontpageData.latestArticles, selectedTagFilter]);
 
-  const selectedArticleId = useMemo(
-    () => frontpageSection === 'middle' ? frontpageData.latestArticles[selectedArticle]?.id ?? null : null,
-    [frontpageData.latestArticles, selectedArticle, frontpageSection]
-  );
-
-  const rightSidebarRef = useListNavigation({
-    selectedIndex: selectedSidebarIndex,
-    isActive: frontpageSection === 'right',
-    useDynamicMetrics: true,
-    buffer: 2,
-  });
+  // Count only articles (not headers) for navigation
+  const articleCount = frontpageData.latestArticles.length;
 
   const middleSectionRef = useListNavigation({
     selectedIndex: selectedArticle,
     isActive: frontpageSection === 'middle',
-    metrics: metrics.articleOffsets,
-    buffer: 1,
+    itemCount: flatItems.length,
+    buffer: 2,
     scrollBehavior: 'minimal',
   });
-
-  const formatArticleDate = (value: Date | string): string => {
-    if (value instanceof Date) {
-      return value.toLocaleDateString();
-    }
-    const parsed = Date.parse(value);
-    if (Number.isNaN(parsed)) {
-      return value;
-    }
-    return new Date(parsed).toLocaleDateString();
-  };
 
   const rightSidebarCounts = useMemo(() => getRightSidebarCounts(frontpageData), [
     frontpageData.jobs.length,
     frontpageData.events.upcomingEvents.length,
     frontpageData.newestComments.length,
   ]);
+
+  const rightSidebarRef = useListNavigation({
+    selectedIndex: selectedSidebarIndex,
+    isActive: frontpageSection === 'right',
+    itemCount: getRightSidebarTotal(rightSidebarCounts),
+    buffer: 2,
+  });
 
   const visibleJobs = useMemo(
     () => frontpageData.jobs.slice(0, rightSidebarCounts.jobs),
@@ -223,6 +108,14 @@ export const FrontpagePage = ({
   const viewAllIndex = rightSidebarCounts.jobs;
   const eventBaseIndex = viewAllIndex + 1;
   const commentBaseIndex = eventBaseIndex + rightSidebarCounts.events;
+
+  // Map article globalIndex to flat list index (accounting for headers)
+  const articleToFlatIndex = (articleIndex: number): number => {
+    // Header is at index 0, so article 0 is at flat index 1, etc.
+    return articleIndex + 1;
+  };
+
+  const selectedFlatIndex = articleToFlatIndex(selectedArticle);
 
   return (
     <box
@@ -246,37 +139,22 @@ export const FrontpagePage = ({
         >
           <text
             content={`🏷️ Filtering by: #${selectedTagFilter} (press c to clear, esc to clear)`}
-            style={{
-              fg: themeColors.tag.name,
-              attributes: 1,
-            }}
+            style={{ fg: themeColors.tag.name, attributes: 1 }}
           />
         </box>
       )}
 
-      <box
-        style={{
-          flexDirection: "row",
-          width: "100%",
-          flexGrow: 1,
-        }}
-      >
-        {/* Middle Section */}
-        <box
-          style={{
-            flexDirection: "column",
-            width: "75%",
-            marginRight: 1,
-          }}
-        >
+      <box style={{ flexDirection: "row", width: "100%", flexGrow: 1 }}>
+        {/* Middle Section - Flattened article list */}
+        <box style={{ flexDirection: "column", width: "75%", marginRight: 1 }}>
           <ScrollSurface
             ref={middleSectionRef}
             focused={frontpageSection === 'middle'}
             variant="panel"
-            padding={2}
+            padding={1}
             width="100%"
           >
-            {contentBlocks.length === 0 && selectedTagFilter ? (
+            {articleCount === 0 && selectedTagFilter ? (
               <box
                 style={{
                   flexDirection: "column",
@@ -295,138 +173,46 @@ export const FrontpagePage = ({
                 />
               </box>
             ) : (
-              contentBlocks.map((block, blockIndex) => {
-                if (block.type === "articles") {
-                  const heading =
-                    block.chunkIndex === 0
-                      ? selectedTagFilter 
-                        ? `Articles tagged with #${selectedTagFilter}`
-                        : t("latestArticles")
-                      : t("moreFrontpageArticles");
+              flatItems.map((item, flatIndex) => {
+                if (item.type === 'header') {
                   return (
                     <box
-                      key={`articles-${blockIndex}`}
+                      key={item.key}
                       style={{
-                        flexDirection: "column",
-                        border: true,
-                        borderColor: themeColors.navigation.selected,
-                        padding: 1,
                         marginBottom: 1,
-                        backgroundColor: colors.surface.card,
+                        padding: 1,
                       }}
                     >
                       <text
-                        content={heading}
-                        style={{
-                          fg: themeColors.navigation.normal,
-                          attributes: block.chunkIndex === 0 ? 1 : 0,
-                        }}
+                        content={item.text}
+                        style={{ fg: themeColors.navigation.normal, attributes: 1 }}
                       />
-                      <box style={{ flexDirection: "column", marginTop: 1 }}>
-                        {block.articles.map((article, articleIndex) => {
-                          const tags = article.tags
-                            ? article.tags
-                                .split(",")
-                                .map((tag) => tag.trim())
-                                .filter(Boolean)
-                                .slice(0, 3)
-                            : [];
-                          const globalIndex = block.startIndex + articleIndex;
-                          const isSelected = globalIndex === selectedArticle;
-                          return (
-                            <ArticleCard
-                              key={article.id}
-                              data={{
-                                title: article.title,
-                                subtitle: article.subtitle,
-                                author: article.byline.name,
-                                date: formatArticleDate(article.published),
-                                reactions: article.reactions.reactions_count,
-                                comments: article.reactions.comments_count,
-                                tags,
-                              }}
-                              prefix={`${globalIndex + 1}.`}
-                              selected={isSelected}
-                              footnote={
-                                isSelected ? t("pressEnter") : undefined
-                              }
-                              variant={block.chunkIndex === 0 ? "default" : "compact"}
-                            />
-                          );
-                        })}
-                      </box>
                     </box>
                   );
                 }
 
-                const isFocus = block.sectionIndex === selectedSection;
-                const focusBg = isFocus
-                  ? themeColors.navigation.selected
-                  : colors.surface.card;
-                const titleFg = isFocus
-                  ? themeColors.navigation.selectedText
-                  : themeColors.navigation.normal;
-                const items = clampSectionArticles(block.section);
-                const tagLabel = block.section.tags1
-                  ? `#${block.section.tags1}`
-                  : undefined;
+                const tags = item.article.tags
+                  ? item.article.tags.split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 3)
+                  : [];
+                const isSelected = item.globalIndex === selectedArticle && frontpageSection === 'middle';
+
                 return (
-                  <box
-                    key={`section-${block.section.title}-${blockIndex}`}
-                    style={{
-                      flexDirection: "column",
-                      border: true,
-                      borderColor: themeColors.navigation.selected,
-                      padding: 1,
-                      marginBottom: 1,
-                      backgroundColor: focusBg,
+                  <ArticleCard
+                    key={item.key}
+                    data={{
+                      title: item.article.title,
+                      subtitle: item.article.subtitle,
+                      author: item.article.byline.name,
+                      date: formatArticleDate(item.article.published),
+                      reactions: item.article.reactions.reactions_count,
+                      comments: item.article.reactions.comments_count,
+                      tags,
                     }}
-                  >
-                    <text
-                      content={block.section.title}
-                      style={{ fg: titleFg, attributes: 1 }}
-                    />
-                    {block.section.description ? (
-                      <text
-                        content={block.section.description}
-                        style={{ fg: themeColors.navigation.normal, marginTop: 0 }}
-                      />
-                    ) : null}
-                    {tagLabel ? (
-                      <text
-                        content={tagLabel}
-                        style={{ fg: themeColors.tag.name, marginTop: 1 }}
-                      />
-                    ) : null}
-                    <box style={{ flexDirection: "column", marginTop: 1 }}>
-                      {items.map((article, articleIndex) => {
-                        const tags = article.tags
-                          ? article.tags
-                              .split(",")
-                              .map((tag) => tag.trim())
-                              .filter(Boolean)
-                              .slice(0, 3)
-                          : [];
-                        return (
-                          <ArticleCard
-                            key={article.id}
-                            data={{
-                              title: article.title,
-                              subtitle: article.subtitle,
-                              author: article.byline.name,
-                              date: formatArticleDate(article.published),
-                              reactions: article.reactions.reactions_count,
-                              comments: article.reactions.comments_count,
-                              tags,
-                            }}
-                            footnote={t("pressEnterToRead")}
-                            prefix={`${articleIndex + 1}.`}
-                            variant="compact"
-                          />
-                        );
-                      })}
-                    </box>
-                  </box>
+                    prefix={`${item.globalIndex + 1}.`}
+                    selected={isSelected}
+                    footnote={isSelected ? t("pressEnter") : undefined}
+                    variant={item.variant}
+                  />
                 );
               })
             )}
@@ -471,14 +257,20 @@ export const FrontpagePage = ({
                 marginBottom: 2,
                 padding: 1,
                 border: true,
-                borderColor: frontpageSection === 'right' && selectedSidebarIndex === viewAllIndex ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-                backgroundColor: frontpageSection === 'right' && selectedSidebarIndex === viewAllIndex ? themeColors.navigation.selectedText : colors.surface.card,
+                borderColor: frontpageSection === 'right' && selectedSidebarIndex === viewAllIndex 
+                  ? themeColors.navigation.selectedText 
+                  : themeColors.navigation.selected,
+                backgroundColor: frontpageSection === 'right' && selectedSidebarIndex === viewAllIndex 
+                  ? themeColors.navigation.selectedText 
+                  : colors.surface.card,
               }}
             >
               <text
                 content={`→ ${t("viewAllJobs")}`}
                 style={{
-                  fg: frontpageSection === 'right' && selectedSidebarIndex === viewAllIndex ? themeColors.navigation.background : themeColors.navigation.normal,
+                  fg: frontpageSection === 'right' && selectedSidebarIndex === viewAllIndex 
+                    ? themeColors.navigation.background 
+                    : themeColors.navigation.normal,
                   attributes: 1,
                 }}
               />
@@ -505,9 +297,7 @@ export const FrontpagePage = ({
                 >
                   <text
                     content={event.name}
-                    style={{
-                      fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal,
-                    }}
+                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
                   />
                 </box>
               );
@@ -534,9 +324,7 @@ export const FrontpagePage = ({
                 >
                   <text
                     content={comment.articleTitle || comment.user?.name || t("anonymousComment")}
-                    style={{
-                      fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal,
-                    }}
+                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
                   />
                 </box>
               );
@@ -546,4 +334,8 @@ export const FrontpagePage = ({
       </box>
     </box>
   );
+};
+
+const getRightSidebarTotal = (counts: { jobs: number; events: number; comments: number }): number => {
+  return counts.jobs + 1 + counts.events + counts.comments; // +1 for "View All" button
 };
