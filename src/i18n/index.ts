@@ -79,7 +79,7 @@ export const translations: Record<string, string> = {
   developmentInfo: "🔧 Utviklingsinfo:",
   headerTitle: "kode24.no",
   footerHelp:
-    "q=Avslutt | Esc=Tilbake | ↑↓←→=Naviger | Enter=Velg | Tab=Bytt seksjon | l=Jobber | c=Fjern filter",
+    "q=Avslutt | Esc=Tilbake | ↑↓←→=Naviger | Enter=Velg | Tab=Bytt seksjon | t=Tags | l=Jobber | c=Fjern filter",
 
   // Help
   keyboardShortcuts: "Tastatursnarveier",
@@ -90,6 +90,7 @@ export const translations: Record<string, string> = {
   navEsc: "  Esc - Gå tilbake",
   pages: "Sider:",
   pageListings: "  l - Stillingsutlysninger",
+  pageTags: "  t - Kategorier & Tags",
   pageEvents: "  e - Arrangementer",
   general: "Generelt:",
   helpToggle: "  h - Vis/skjul denne hjelpen",

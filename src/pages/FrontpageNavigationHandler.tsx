@@ -1,11 +1,10 @@
 import type { KeyEvent, Frontpage, Page } from '../types/index.js';
-import { popularTags } from './TagsPage.js';
 import { getRightSidebarCounts, getRightSidebarTotal, getRightSidebarItemType } from './rightSidebarConfig.js';
 
 interface NavigationState {
   selectedIndex: number;
   selectedSection: number;
-  frontpageSection?: 'left' | 'middle' | 'right';
+  frontpageSection?: 'middle' | 'right';
 }
 
 interface FrontpageNavigationHandlerOptions {
@@ -13,10 +12,10 @@ interface FrontpageNavigationHandlerOptions {
   frontpageData: Frontpage;
   filteredFrontpageData: Frontpage | null;
   selectedTagFilter: string | null;
-  updateSelection: (selectedIndex: number, selectedSection?: number, frontpageSection?: 'left' | 'middle' | 'right') => void;
+  updateSelection: (selectedIndex: number, selectedSection?: number, frontpageSection?: 'middle' | 'right') => void;
   onNavigateToArticle: (articleId: string) => void;
   onNavigateToPage: (page: Page) => void;
-  onFilterByTag: (tagName: string) => void;
+  onToggleTags: () => void;
   onClearFilter: () => void;
 }
 
@@ -30,7 +29,7 @@ export const createFrontpageNavigationHandler = (options: FrontpageNavigationHan
       updateSelection,
       onNavigateToArticle,
       onNavigateToPage,
-      onFilterByTag,
+      onToggleTags,
       onClearFilter,
     } = options;
 
@@ -38,10 +37,15 @@ export const createFrontpageNavigationHandler = (options: FrontpageNavigationHan
     const activeData = filteredFrontpageData || frontpageData;
 
     if (key.name === 'tab') {
-      const sections = ['left', 'middle', 'right'] as const;
+      const sections = ['middle', 'right'] as const;
       const currentIndex = sections.indexOf(currentSection);
       const nextIndex = (currentIndex + 1) % sections.length;
       updateSelection(navigation.selectedIndex, navigation.selectedSection, sections[nextIndex]);
+      return true;
+    }
+
+    if (key.name === 't') {
+      onToggleTags();
       return true;
     }
 
@@ -60,10 +64,6 @@ export const createFrontpageNavigationHandler = (options: FrontpageNavigationHan
       return true;
     }
 
-    if (currentSection === 'left') {
-      return handleLeftSidebar(key, navigation, updateSelection, onFilterByTag);
-    }
-
     if (currentSection === 'middle') {
       return handleMiddleSection(key, navigation, activeData, updateSelection, onNavigateToArticle);
     }
@@ -76,37 +76,11 @@ export const createFrontpageNavigationHandler = (options: FrontpageNavigationHan
   };
 };
 
-const handleLeftSidebar = (
-  key: KeyEvent,
-  navigation: NavigationState,
-  updateSelection: (selectedIndex: number, selectedSection?: number, frontpageSection?: 'left' | 'middle' | 'right') => void,
-  onFilterByTag: (tagName: string) => void
-): boolean => {
-  if (key.name === 'up' && navigation.selectedIndex > 0) {
-    updateSelection(navigation.selectedIndex - 1, navigation.selectedSection, 'left');
-    return true;
-  }
-
-  if (key.name === 'down' && navigation.selectedIndex < popularTags.length - 1) {
-    updateSelection(navigation.selectedIndex + 1, navigation.selectedSection, 'left');
-    return true;
-  }
-
-  if (key.name === 'return') {
-    const selectedTag = popularTags[navigation.selectedIndex];
-    onFilterByTag(selectedTag.name);
-    updateSelection(0, 0, 'middle');
-    return true;
-  }
-
-  return false;
-};
-
 const handleMiddleSection = (
   key: KeyEvent,
   navigation: NavigationState,
   activeData: Frontpage,
-  updateSelection: (selectedIndex: number, selectedSection?: number, frontpageSection?: 'left' | 'middle' | 'right') => void,
+  updateSelection: (selectedIndex: number, selectedSection?: number, frontpageSection?: 'middle' | 'right') => void,
   onNavigateToArticle: (articleId: string) => void
 ): boolean => {
   if (key.name === 'up' && navigation.selectedIndex > 0) {
@@ -162,7 +136,7 @@ const handleRightSidebar = (
   key: KeyEvent,
   navigation: NavigationState,
   frontpageData: Frontpage,
-  updateSelection: (selectedIndex: number, selectedSection?: number, frontpageSection?: 'left' | 'middle' | 'right') => void,
+  updateSelection: (selectedIndex: number, selectedSection?: number, frontpageSection?: 'middle' | 'right') => void,
   onNavigateToPage: (page: Page) => void
 ): boolean => {
   const counts = getRightSidebarCounts(frontpageData);

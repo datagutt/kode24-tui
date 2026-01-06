@@ -7,6 +7,7 @@ import { useKeyboardHandler } from './hooks/useKeyboardHandler.js';
 import { createFrontpageNavigationHandler } from './pages/FrontpageNavigationHandler.js';
 import { Layout } from './components/Layout.js';
 import { HelpOverlay } from './components/HelpOverlay.js';
+import { TagsOverlay } from './components/TagsOverlay.js';
 import { FrontpagePage } from './pages/FrontpagePage.js';
 import { ArticlePage } from './pages/ArticlePage.js';
 import { ListingsPage } from './pages/ListingsPage.js';
@@ -20,6 +21,7 @@ export const App = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showTags, setShowTags] = useState(false);
   const [currentArticleId, setCurrentArticleId] = useState<string | null>(null);
   const { navigation, navigateToPage, goBack, updateSelection } = useNavigation();
 
@@ -81,7 +83,7 @@ export const App = () => {
       return;
     }
 
-    if (navigation.currentPage === 'frontpage' && frontpageData) {
+    if (navigation.currentPage === 'frontpage' && frontpageData && !showTags) {
       const handler = createFrontpageNavigationHandler({
         navigation,
         frontpageData,
@@ -90,10 +92,7 @@ export const App = () => {
         updateSelection,
         onNavigateToArticle: navigateToArticle,
         onNavigateToPage: navigateToPage,
-        onFilterByTag: (tagName) => {
-          setSelectedTagFilter(tagName);
-          filterFrontpageByTag(tagName);
-        },
+        onToggleTags: () => setShowTags(true),
         onClearFilter: clearFilter,
       });
       handler(key);
@@ -173,7 +172,6 @@ export const App = () => {
             selectedSection={navigation.selectedSection}
             selectedArticle={navigation.frontpageSection === 'middle' ? safeSelectedArticle : 0}
             frontpageSection={navigation.frontpageSection || 'middle'}
-            selectedTagIndex={navigation.frontpageSection === 'left' ? navigation.selectedIndex : 0}
             selectedSidebarIndex={navigation.frontpageSection === 'right' ? navigation.selectedIndex : 0}
             selectedTagFilter={selectedTagFilter}
             onNavigateToArticle={navigateToArticle}
@@ -224,9 +222,22 @@ export const App = () => {
     }
   };
 
+  const handleTagSelect = (tagName: string) => {
+    setSelectedTagFilter(tagName);
+    filterFrontpageByTag(tagName);
+    updateSelection(0, 0, 'middle');
+  };
+
   return (
     <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
       {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
+      {showTags && (
+        <TagsOverlay 
+          onClose={() => setShowTags(false)} 
+          onSelectTag={handleTagSelect}
+          selectedTagFilter={selectedTagFilter}
+        />
+      )}
       {renderCurrentPage()}
     </Layout>
   );

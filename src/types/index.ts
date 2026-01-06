@@ -20,7 +20,7 @@ export interface NavigationState {
   currentPage: Page;
   selectedIndex: number;
   selectedSection: number;
-  frontpageSection?: 'left' | 'middle' | 'right';
+  frontpageSection?: 'middle' | 'right';
   breadcrumb: string[];
 }
 

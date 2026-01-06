@@ -1,12 +1,10 @@
-import { useMemo, useEffect, useRef } from "react";
+import { useMemo } from "react";
 import type { Frontpage } from "../types/index.js";
 import { colors, themeColors } from "../theme/colors.js";
-import type { ScrollBoxRenderable } from "@opentui/core";
 import { useListNavigation } from "../hooks/useListNavigation.js";
 import { t } from "../i18n/index.js";
 import { JobCard } from "../components/JobCard.js";
 import { ArticleCard } from "../components/ArticleCard.js";
-import { popularTags } from "./TagsPage.js";
 import ScrollSurface from "../components/ScrollSurface.js";
 import { getRightSidebarCounts } from "./rightSidebarConfig.js";
 
@@ -30,8 +28,7 @@ interface FrontpagePageProps {
   frontpageData: Frontpage;
   selectedSection: number;
   selectedArticle: number;
-  frontpageSection: 'left' | 'middle' | 'right';
-  selectedTagIndex?: number;
+  frontpageSection: 'middle' | 'right';
   selectedSidebarIndex?: number;
   selectedTagFilter?: string | null;
   onNavigateToArticle: (articleId: string) => void;
@@ -43,7 +40,6 @@ export const FrontpagePage = ({
   selectedSection,
   selectedArticle,
   frontpageSection,
-  selectedTagIndex = 0,
   selectedSidebarIndex = 0,
   selectedTagFilter,
   onNavigateToArticle,
@@ -179,13 +175,6 @@ export const FrontpagePage = ({
     [frontpageData.latestArticles, selectedArticle, frontpageSection]
   );
 
-  const leftSidebarRef = useListNavigation({
-    selectedIndex: selectedTagIndex,
-    isActive: frontpageSection === 'left',
-    useDynamicMetrics: true,
-    buffer: 2,
-  });
-
   const rightSidebarRef = useListNavigation({
     selectedIndex: selectedSidebarIndex,
     isActive: frontpageSection === 'right',
@@ -272,58 +261,11 @@ export const FrontpagePage = ({
           flexGrow: 1,
         }}
       >
-        {/* Left Sidebar */}
-        <box
-          style={{
-            width: "22%",
-            backgroundColor: themeColors.navigation.background,
-            flexDirection: "column",
-            marginRight: 1,
-          }}
-        >
-          <text
-            content={t("categoriesTags")}
-            style={{ fg: themeColors.navigation.normal, attributes: 1 }}
-          />
-          <ScrollSurface
-            ref={leftSidebarRef}
-            variant="sidebar"
-            focused={frontpageSection === 'left'}
-            width="100%"
-          >
-            {popularTags.map((tag, index) => {
-              const isSelected = frontpageSection === 'left' && index === selectedTagIndex;
-              const isActiveFilter = selectedTagFilter === tag.name;
-              return (
-                <box
-                  key={tag.name}
-                  style={{
-                    marginBottom: 1,
-                    padding: 1,
-                    border: true,
-                    borderColor: isSelected ? themeColors.navigation.selectedText : isActiveFilter ? themeColors.tag.background : themeColors.navigation.selected,
-                    backgroundColor: isSelected ? themeColors.navigation.selectedText : isActiveFilter ? themeColors.tag.background : colors.surface.card,
-                  }}
-                >
-                  <text
-                    content={`${isActiveFilter ? '🏷️ ' : ''}#${tag.name}`}
-                    style={{ 
-                      fg: isSelected ? themeColors.navigation.background : themeColors.tag.name, 
-                      attributes: isActiveFilter ? 1 : 0
-                    }}
-                  />
-                </box>
-              );
-            })}
-          </ScrollSurface>
-        </box>
-
         {/* Middle Section */}
         <box
           style={{
             flexDirection: "column",
-            width: "56%",
-            marginLeft: 1,
+            width: "75%",
             marginRight: 1,
           }}
         >

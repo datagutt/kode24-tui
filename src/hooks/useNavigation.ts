@@ -33,7 +33,7 @@ export const useNavigation = (initialPage: Page = 'frontpage') => {
     });
   }, []);
 
-  const updateSelection = useCallback((selectedIndex: number, selectedSection?: number, frontpageSection?: 'left' | 'middle' | 'right') => {
+  const updateSelection = useCallback((selectedIndex: number, selectedSection?: number, frontpageSection?: 'middle' | 'right') => {
     setHistory(prev => {
       const current = prev[prev.length - 1];
       const newState = {
