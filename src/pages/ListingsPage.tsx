@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import type { Job } from '../types/index.js';
-import type { ScrollBoxRenderable } from '@opentui/core';
 import { t } from '../i18n/index.js';
 import { useTheme } from '../hooks/useTheme.js';
 import { JobCard } from '../components/JobCard.js';
 import ScrollSurface from '../components/ScrollSurface.js';
+import { useListNavigation } from '../hooks/useListNavigation.js';
 
 interface ListingsPageProps {
   initialJobs?: Job[];
@@ -18,15 +18,15 @@ export const ListingsPage = ({ initialJobs = [], selectedJob, onJobSelect }: Lis
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(initialJobs);
 
-  const scrollboxRef = useRef<ScrollBoxRenderable>(null);
   const theme = useTheme();
 
-  useEffect(() => {
-    if (scrollboxRef.current) {
-      const estimatedHeightPerJob = 10;
-      scrollboxRef.current.scrollTop = selectedJob * estimatedHeightPerJob;
-    }
-  }, [selectedJob]);
+  const scrollboxRef = useListNavigation({
+    selectedIndex: selectedJob,
+    isActive: true,
+    useDynamicMetrics: true,
+    buffer: 2,
+    scrollBehavior: 'minimal',
+  });
 
   useEffect(() => {
     // Filter jobs based on search query
