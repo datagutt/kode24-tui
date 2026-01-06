@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../services/api.js";
 import { useScrollboxFocus } from "../hooks/useScrollboxFocus.js";
-import type { ScrollBoxRenderable } from "@opentui/core";
+import { useListNavigation } from "../hooks/useListNavigation.js";
 import { t } from "../i18n/index.js";
 import { themeColors } from "../theme/colors.js";
 import { ArticleCard } from "../components/ArticleCard.js";
@@ -59,7 +59,13 @@ export const TagsPage = ({
     return output.columns ?? 120;
   });
 
-  const tagsScrollboxRef = useRef<ScrollBoxRenderable>(null);
+  const tagsScrollboxRef = useListNavigation({
+    selectedIndex: selectedTag,
+    isActive: true,
+    useDynamicMetrics: true,
+    buffer: 1,
+    scrollBehavior: 'minimal',
+  });
   const articlesScrollboxRef = useScrollboxFocus([tagArticles]);
 
   useEffect(() => {
@@ -94,13 +100,6 @@ export const TagsPage = ({
     ? "100%"
     : Math.max(22, Math.min(36, Math.floor(terminalWidth * 0.22)));
   const contentHeight = narrowLayout ? "auto" : "100%";
-
-  useEffect(() => {
-    if (tagsScrollboxRef.current) {
-      const estimatedHeightPerTag = 2;
-      tagsScrollboxRef.current.scrollTop = selectedTag * estimatedHeightPerTag;
-    }
-  }, [selectedTag]);
 
   useEffect(() => {
     setTags(popularTags);
