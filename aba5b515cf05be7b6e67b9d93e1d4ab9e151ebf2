@@ -1,0 +1,29 @@
+src/components/EventCard.tsx
+  2d881e0e5ae2bc35 1-44
+src/pages/EventsPage.tsx
+  2d881e0e5ae2bc35 1-66
+src/index.tsx
+  2d881e0e5ae2bc35 12,164
+src/i18n/index.ts
+  2d881e0e5ae2bc35 67-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.10",
+  "base_commit_sha": "aba5b515cf05be7b6e67b9d93e1d4ab9e151ebf2",
+  "prompts": {
+    "2d881e0e5ae2bc35": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6c04982c-e941-47cd-a928-9c2504499667",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Thomas Lekanger <thomas.lekanger@hotmail.com>",
+      "messages": [],
+      "total_additions": 114,
+      "total_deletions": 4,
+      "accepted_lines": 114,
+      "overriden_lines": 0
+    }
+  }
+}
