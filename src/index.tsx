@@ -9,6 +9,7 @@ import { TagsOverlay } from './components/TagsOverlay.js';
 import { FrontpagePage } from './pages/FrontpagePage.js';
 import { ArticlePage } from './pages/ArticlePage.js';
 import { ListingsPage } from './pages/ListingsPage.js';
+import { EventsPage } from './pages/EventsPage.js';
 import type { Frontpage, Article, KeyEvent } from './types/index.js';
 import { t } from './i18n/index.js';
 
@@ -160,10 +161,7 @@ export const App = () => {
 
       case 'events':
         return (
-          <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
-            <text content={t('eventsComingSoon')} style={{ fg: 'cyan' }} />
-            <text content={t('pressEscToGoBack')} style={{ fg: 'gray' }} marginTop={1} />
-          </box>
+          <EventsPage events={frontpageData.events.upcomingEvents} />
         );
 
       default:

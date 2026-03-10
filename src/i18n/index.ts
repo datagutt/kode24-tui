@@ -64,6 +64,8 @@ export const translations: Record<string, string> = {
   noArticleSelected: "Ingen artikkel valgt",
   pressEscToGoBack: "Trykk Esc for å gå tilbake",
   eventsComingSoon: "Arrangementer-side (Kommer snart)",
+  foundEvents: "Fant {count} arrangementer",
+  noEventsFound: "Ingen arrangementer funnet",
   unknownPage: "Ukjent side",
   viewsIcon: "👁️ ",
   likesIcon: "❤️ ",
