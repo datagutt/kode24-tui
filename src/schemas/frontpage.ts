@@ -28,7 +28,7 @@ export const CompanyPartnerCompanySchema = z.object({
 export type CompanyPartnerCompany = z.infer<typeof CompanyPartnerCompanySchema>;
 
 export const BylineClassSchema = z.object({
-    "imageUrl": z.string(),
+    "imageUrl": z.string().optional(),
     "name": z.string(),
 });
 export type BylineClass = z.infer<typeof BylineClassSchema>;
@@ -254,7 +254,6 @@ export const OldFrontpageApiSchema = z.object({
     "listing": ListingSchema,
     "content": z.array(ContentSchema),
     "events": EventsSchema,
-    "partners": z.array(PartnerSchema),
     "newestComments": z.array(NewestCommentSchema),
     "companyPartners": z.array(CompanyPartnerSchema),
     "contentTiles": z.array(BannerAdSchema),
@@ -272,7 +271,6 @@ export const FrontpageSchema = z.object({
     "listing": ListingSchema,
     "content": z.array(ContentSchema),
     "events": EventsSchema,
-    "partners": z.array(PartnerSchema),
     "newestComments": z.array(NewestCommentSchema),
     "companyPartners": z.array(CompanyPartnerSchema),
     "contentTiles": z.array(BannerAdSchema),
