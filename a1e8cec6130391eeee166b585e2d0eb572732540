@@ -1,0 +1,23 @@
+src/utils/htmlToOpenTUI.tsx
+  6486f98e638140d1 38-134,138-171,175-192,194-195,197-198,200-203,206,209-210,214-217,221,224-225,229-244,247-250,252-253,256-257,260,263-265,268
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.10",
+  "base_commit_sha": "a1e8cec6130391eeee166b585e2d0eb572732540",
+  "prompts": {
+    "6486f98e638140d1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5228f2fb-d0c4-484e-818c-b307aa3bd3d3",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Thomas Lekanger <thomas.lekanger@hotmail.com>",
+      "messages": [],
+      "total_additions": 298,
+      "total_deletions": 159,
+      "accepted_lines": 196,
+      "overriden_lines": 0
+    }
+  }
+}
