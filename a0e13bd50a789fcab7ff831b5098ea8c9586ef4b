@@ -1,0 +1,51 @@
+src/components/ArticleCard.tsx
+  6486f98e638140d1 19,25,29-31,34-56,62-63,77-78,83,86-87,90-91,98-99,102-103,115
+src/pages/TagsPage.tsx
+  6486f98e638140d1 8,46,83,91,94,104,106-108,132,140-141,145,147,156,158,160,164,167
+src/components/HelpOverlay.tsx
+  6486f98e638140d1 24,36
+src/pages/ListingsPage.tsx
+  6486f98e638140d1 2-3,14-16,25-29,31,37,46,52
+src/pages/ArticlePage.tsx
+  6486f98e638140d1 15,56,65-66,68-71,73-78,81-94,97-100,102-107,109-112,114-115
+src/i18n/index.ts
+  6486f98e638140d1 82-85,91
+src/hooks/useNavigation.ts
+  6486f98e638140d1 12,15,18,29
+src/components/Layout.tsx
+  6486f98e638140d1 14-17,22-28,45,59,64,76,89
+src/hooks/useListNavigation.ts
+  6486f98e638140d1 1,18-25,27,37,39,45,47-51,55,60
+src/schemas/frontpage.ts
+  6486f98e638140d1 236
+src/components/TagsOverlay.tsx
+  6486f98e638140d1 67,73,99,112
+src/index.tsx
+  6486f98e638140d1 2,24,30-33,48-49,57-58,111,115,122-128,132,139-142,145,155,158,160,168
+src/pages/FrontpagePage.tsx
+  6486f98e638140d1 1-3,16-19,22-28,30-46,52-57,59-61,63-64,68-70,72,74,78,82,85-114,116-118,120-197,199-220,223-225,236,247,253-256,260,262-269,271-293,297-299,301-305,307,309,313,318-319,322,326-335,339,341-344,349-353,355-362,364-369,371,373-387,398
+src/services/api.ts
+  6486f98e638140d1 68
+src/types/index.ts
+  6486f98e638140d1 6-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.10",
+  "base_commit_sha": "a0e13bd50a789fcab7ff831b5098ea8c9586ef4b",
+  "prompts": {
+    "6486f98e638140d1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5228f2fb-d0c4-484e-818c-b307aa3bd3d3",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Thomas Lekanger <thomas.lekanger@hotmail.com>",
+      "messages": [],
+      "total_additions": 587,
+      "total_deletions": 999,
+      "accepted_lines": 504,
+      "overriden_lines": 0
+    }
+  }
+}
