@@ -60,9 +60,38 @@ export const FrontpagePage = ({
   const [mainIndex, setMainIndex] = useState(0);
   const [sidebarIndex, setSidebarIndex] = useState(0);
 
-  const { hero, stream } = useMemo(
+  // Responsive: detect terminal dimensions
+  const [terminalWidth, setTerminalWidth] = useState(() => process.stdout?.columns ?? 120);
+  const [terminalHeight, setTerminalHeight] = useState(() => process.stdout?.rows ?? 40);
+  useEffect(() => {
+    const output = process.stdout;
+    if (!output?.on) return;
+    const update = () => {
+      setTerminalWidth(output.columns ?? 120);
+      setTerminalHeight(output.rows ?? 40);
+    };
+    output.on("resize", update);
+    return () => { output.off?.("resize", update); };
+  }, []);
+  const showSidebar = terminalWidth >= 100;
+  // Fixed sidebar width prevents text wrapping on narrow terminals
+  const sidebarWidth = Math.min(45, Math.floor(terminalWidth * 0.3));
+
+  // Available height after header (3), footer (2), padding (2)
+  const availableHeight = terminalHeight - 7;
+  // Each hero card is ~10 rows; cap heroes so they don't exceed ~60% of available space
+  const maxHeroes = availableHeight < 20 ? 0 : availableHeight < 35 ? 1 : 3;
+
+  const { hero: allHero, stream: baseStream } = useMemo(
     () => splitArticles(frontpageData.latestArticles),
     [frontpageData.latestArticles]
+  );
+
+  // Cap heroes based on terminal height; overflow goes to stream
+  const hero = useMemo(() => allHero.slice(0, maxHeroes), [allHero, maxHeroes]);
+  const stream = useMemo(
+    () => [...allHero.slice(maxHeroes), ...baseStream],
+    [allHero, maxHeroes, baseStream]
   );
 
   // Total navigable articles: hero + stream
@@ -89,10 +118,14 @@ export const FrontpagePage = ({
   const eventBaseIndex = viewAllJobsIndex + 1;
   const commentBaseIndex = eventBaseIndex + visibleEvents.length;
 
-  // Stream scrollbox navigation (hero items aren't in the scrollbox)
+  // Header box is a non-navigable child between heroes and stream in the ScrollSurface.
+  // Offset selectedIndex past it so scroll tracking targets the right child.
+  const visibleHeroCount = (hero.length > 0 && !selectedTagFilter) ? hero.length : 0;
+  const scrollChildIndex = mainIndex < visibleHeroCount ? mainIndex : mainIndex + 1;
+
   const streamScrollRef = useListNavigation({
-    selectedIndex: Math.max(0, mainIndex - hero.length),
-    isActive: panel === 'main' && mainIndex >= hero.length,
+    selectedIndex: scrollChildIndex,
+    isActive: panel === 'main',
     buffer: 2,
   });
 
@@ -101,17 +134,6 @@ export const FrontpagePage = ({
     isActive: panel === 'sidebar',
     buffer: 2,
   });
-
-  // Responsive: detect narrow terminals
-  const [terminalWidth, setTerminalWidth] = useState(() => process.stdout?.columns ?? 120);
-  useEffect(() => {
-    const output = process.stdout;
-    if (!output?.on) return;
-    const update = () => setTerminalWidth(output.columns ?? 120);
-    output.on("resize", update);
-    return () => { output.off?.("resize", update); };
-  }, []);
-  const showSidebar = terminalWidth >= 80;
 
   // Keyboard handling - frontpage owns its own keys
   useKeyboard((key: KeyEvent) => {
@@ -250,27 +272,10 @@ export const FrontpagePage = ({
         </box>
       )}
 
-      {/* Hero section - full width, fixed height based on hero count */}
-      {hero.length > 0 && !selectedTagFilter && (
-        <box style={{ flexDirection: "column", height: hero.length * 10, flexShrink: 0 }}>
-          {hero.map((article, index) => renderHeroArticle(article, index))}
-        </box>
-      )}
-
       {/* Main content area: stream + sidebar */}
       <box style={{ flexDirection: "row", width: "100%", flexGrow: 1 }}>
         {/* Article stream */}
-        <box style={{ flexDirection: "column", width: showSidebar ? "75%" : "100%", marginRight: showSidebar ? 1 : 0 }}>
-          <box style={{ marginBottom: 1, padding: 1 }}>
-            <text content={headerText} style={{ fg: themeColors.navigation.normal, attributes: 1 }} />
-            {stream.length > 0 && (
-              <text
-                content={`  (${stream.length})`}
-                style={{ fg: themeColors.navigation.normal }}
-              />
-            )}
-          </box>
-
+        <box style={{ flexDirection: "column", flexGrow: 1, marginRight: showSidebar ? 1 : 0 }}>
           {totalArticles === 0 && selectedTagFilter ? (
             <box style={{ flexDirection: "column", alignItems: "center", padding: 2 }}>
               <text content={`Ingen artikler for #${selectedTagFilter}`} style={{ fg: 'yellow', attributes: 1 }} />
@@ -284,7 +289,21 @@ export const FrontpagePage = ({
               padding={1}
               width="100%"
             >
-              {/* When tag filtered, show all articles in stream (no hero split) */}
+              {/* Hero cards inside scroll so everything navigates together */}
+              {hero.length > 0 && !selectedTagFilter &&
+                hero.map((article, index) => renderHeroArticle(article, index))
+              }
+
+              <box style={{ flexDirection: "row", marginBottom: 1, marginTop: hero.length > 0 && !selectedTagFilter ? 1 : 0 }}>
+                <text content={headerText} style={{ fg: themeColors.navigation.normal, attributes: 1 }} />
+                {stream.length > 0 && (
+                  <text
+                    content={`  (${stream.length})`}
+                    style={{ fg: themeColors.navigation.normal }}
+                  />
+                )}
+              </box>
+
               {selectedTagFilter
                 ? allArticles.map((article, index) => renderStreamArticle(article, index))
                 : stream.map((article, index) => renderStreamArticle(article, index))
@@ -295,7 +314,7 @@ export const FrontpagePage = ({
 
         {/* Sidebar */}
         {showSidebar && (
-          <box style={{ width: "25%", flexDirection: "column" }}>
+          <box style={{ width: sidebarWidth, flexShrink: 0, flexDirection: "column" }}>
             <box style={{ marginBottom: 1, padding: 1 }}>
               <text
                 content={panel === 'sidebar' ? "▶ Sidebar" : "  Sidebar"}
