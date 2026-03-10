@@ -1,16 +1,18 @@
 import { createFetch } from "@better-fetch/fetch";
 import * as z from "zod";
-import { FrontpageSchema } from "../schemas/frontpage.js";
+import { OldFrontpageApiSchema, ArticleSchema } from "../schemas/frontpage.js";
 import {
   LabSchema,
   SearchResultsSchema,
   TagArticlesResponseSchema,
+  ResultSchema,
 } from "../schemas/lab.js";
 import type {
   Frontpage,
   Lab,
   SearchResults,
   TagArticlesResponse,
+  Article,
 } from "../types/index.js";
 
 const BASE_URL = "https://docs.kode24.no/api";
@@ -31,23 +33,79 @@ const $fetch = createFetch({
     baseDelay: 1000,
     maxDelay: 5000,
   },
-  timeout: 10000, // 10 second timeout
+  timeout: 10000,
 });
+
+// Schema for the new frontpage API response
+const NewFrontpageSchema = z.object({
+  page: z.any(),
+  result: z.array(ResultSchema).optional(),
+});
+
+// Transform a lab Result to an Article format
+function transformResultToArticle(result: z.infer<typeof ResultSchema>): Article {
+  const urlId = result.url.split("/").pop() ?? String(result.id);
+  return {
+    id: urlId,
+    title: result.title,
+    published: result.published,
+    section: result.section || "artikkel",
+    image: result.images[0]?.url ?? "",
+    published_url: result.url,
+    tags: result.tags.join(", "),
+    subtitle: result.teaserSubtitle || result.description,
+    oldId: urlId,
+    frontCropUrl: result.images[0]?.url ?? "",
+    byline: {
+      imageUrl: result.bylineImage,
+      name: result.byline,
+    },
+    reactions: {
+      reactions: [],
+      comments_count: 0,
+      reactions_count: 0,
+    },
+    width: result.width ?? result.metadata.width.desktop ?? null,
+  };
+}
 
 export const api = {
   async fetchFrontpage(): Promise<Frontpage> {
-    const { data, error } = await $fetch(`${BASE_URL}/frontpage`, {
-      output: FrontpageSchema,
-    });
+    // Fetch both APIs in parallel
+    const [oldApiResult, newApiResult] = await Promise.all([
+      $fetch(`${BASE_URL}/frontpage`, { output: OldFrontpageApiSchema }),
+      $fetch(`${LABRADOR_BASE}/?lab_viewport=json`, { output: NewFrontpageSchema }),
+    ]);
 
-    if (error) {
+    if (oldApiResult.error) {
       throw new ApiError(
-        `Failed to fetch frontpage: ${error.message}`,
-        error.status
+        `Failed to fetch frontpage data: ${oldApiResult.error.message}`,
+        oldApiResult.error.status
       );
     }
 
-    return data!;
+    if (newApiResult.error) {
+      throw new ApiError(
+        `Failed to fetch frontpage articles: ${newApiResult.error.message}`,
+        newApiResult.error.status
+      );
+    }
+
+    const oldData = oldApiResult.data!;
+    const newData = newApiResult.data!;
+
+    // Transform new API results to Article format, filter out non-kode24 and future articles
+    const now = new Date();
+    const articles = (newData.result ?? [])
+      .filter((r) => new URL(r.url).hostname.endsWith("kode24.no") && r.published <= now)
+      .map(transformResultToArticle);
+
+    // Merge: use articles from new API, everything else from old API
+    return {
+      ...oldData,
+      latestArticles: articles,
+      frontpage: [], // No longer available from old API
+    };
   },
 
   async fetchArticle(articleId: string): Promise<Lab> {

@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../services/api.js";
-import { useScrollboxFocus } from "../hooks/useScrollboxFocus.js";
-import type { ScrollBoxRenderable } from "@opentui/core";
+import { useListNavigation } from "../hooks/useListNavigation.js";
 import { t } from "../i18n/index.js";
 import { themeColors } from "../theme/colors.js";
 import { ArticleCard } from "../components/ArticleCard.js";
 import type { ArticleCardData } from "../components/ArticleCard.js";
+import ScrollSurface from "../components/ScrollSurface.js";
 
 interface TagsPageProps {
   selectedTag: number;
@@ -16,10 +16,8 @@ interface TagsPageProps {
 interface TagInfo {
   name: string;
   count: number;
-  description?: string;
 }
 
-// Kode24 tags from left menu navigation
 export const popularTags: TagInfo[] = [
   { name: "lønn", count: 0 },
   { name: "sikkerhet", count: 0 },
@@ -45,66 +43,15 @@ export const TagsPage = ({
   selectedTagName,
   onTagSelect,
 }: TagsPageProps) => {
-  const [tags, setTags] = useState<TagInfo[]>([]);
+  const [tags] = useState<TagInfo[]>(popularTags);
   const [tagArticles, setTagArticles] = useState<ArticleCardData[]>([]);
   const [loading, setLoading] = useState(false);
-  const [terminalWidth, setTerminalWidth] = useState(() => {
-    if (typeof process === "undefined") {
-      return 120;
-    }
-    const output = process.stdout;
-    if (!output) {
-      return 120;
-    }
-    return output.columns ?? 120;
+
+  const tagsScrollboxRef = useListNavigation({
+    selectedIndex: selectedTag,
+    isActive: true,
+    buffer: 1,
   });
-
-  const tagsScrollboxRef = useRef<ScrollBoxRenderable>(null);
-  const articlesScrollboxRef = useScrollboxFocus([tagArticles]);
-
-  useEffect(() => {
-    if (typeof process === "undefined") {
-      return;
-    }
-    const output = process.stdout;
-    if (!output) {
-      return;
-    }
-    const update = () => {
-      setTerminalWidth(output.columns ?? 120);
-    };
-    update();
-    if (typeof output.on !== "function") {
-      return;
-    }
-    output.on("resize", update);
-    return () => {
-      if (typeof output.off === "function") {
-        output.off("resize", update);
-        return;
-      }
-      if (typeof output.removeListener === "function") {
-        output.removeListener("resize", update);
-      }
-    };
-  }, []);
-
-  const narrowLayout = terminalWidth < 100;
-  const tagsWidth = narrowLayout
-    ? "100%"
-    : Math.max(22, Math.min(36, Math.floor(terminalWidth * 0.22)));
-  const contentHeight = narrowLayout ? "auto" : "100%";
-
-  useEffect(() => {
-    if (tagsScrollboxRef.current) {
-      const estimatedHeightPerTag = 2;
-      tagsScrollboxRef.current.scrollTop = selectedTag * estimatedHeightPerTag;
-    }
-  }, [selectedTag]);
-
-  useEffect(() => {
-    setTags(popularTags);
-  }, []);
 
   useEffect(() => {
     if (selectedTagName) {
@@ -121,9 +68,7 @@ export const TagsPage = ({
           article.published instanceof Date
             ? article.published.toLocaleDateString()
             : (() => {
-                const parsed = Date.parse(
-                  article.published as unknown as string
-                );
+                const parsed = Date.parse(article.published as unknown as string);
                 return Number.isNaN(parsed)
                   ? String(article.published ?? "")
                   : new Date(parsed).toLocaleDateString();
@@ -135,8 +80,7 @@ export const TagsPage = ({
         } satisfies ArticleCardData;
       });
       setTagArticles(mapped);
-    } catch (error) {
-      console.error("Failed to fetch tag articles:", error);
+    } catch {
       setTagArticles([]);
     } finally {
       setLoading(false);
@@ -144,30 +88,24 @@ export const TagsPage = ({
   };
 
   return (
-    <box
-      style={{
-        flexDirection: narrowLayout ? "column" : "row",
-        height: "100%",
-        width: "100%",
-      }}
-    >
-      {/* Left: Tags List */}
+    <box style={{ flexDirection: "row", height: "100%", width: "100%" }}>
       <box
         style={{
-          width: tagsWidth,
+          width: 30,
           backgroundColor: themeColors.navigation.background,
           flexDirection: "column",
           padding: 1,
-          ...(narrowLayout ? { marginBottom: 1 } : {}),
         }}
       >
         <text
           content={t("categoriesTags")}
           style={{ fg: themeColors.navigation.normal, attributes: 1 }}
         />
-        <scrollbox
+        <ScrollSurface
           ref={tagsScrollboxRef}
-          style={{ height: narrowLayout ? 12 : "100%" }}
+          variant="sidebar"
+          focused
+          width="100%"
         >
           {tags.map((tag, index) => (
             <box
@@ -191,54 +129,22 @@ export const TagsPage = ({
               />
             </box>
           ))}
-        </scrollbox>
+        </ScrollSurface>
       </box>
 
-      {/* Main: Tag Articles or Instructions */}
       <box
         style={{
           flexDirection: "column",
           padding: 1,
-          width: narrowLayout ? "100%" : "auto",
           flexGrow: 1,
-          height: contentHeight,
-          ...(narrowLayout ? {} : { marginLeft: 1 }),
+          height: "100%",
+          marginLeft: 1,
         }}
       >
         {!selectedTagName ? (
-          <box
-            style={{
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-            }}
-          >
-            <text
-              content={t("selectTag")}
-              style={{ fg: "cyan", attributes: 1, marginBottom: 1 }}
-            />
-            <text
-              content={t("chooseCategory")}
-              style={{ fg: "gray", marginBottom: 2 }}
-            />
-            <text
-              content={t("popularCategories")}
-              style={{ fg: "white", marginBottom: 1 }}
-            />
-            <text
-              content={t("frontend")}
-              style={{ fg: "blue", marginBottom: 1 }}
-            />
-            <text
-              content={t("backend")}
-              style={{ fg: "blue", marginBottom: 1 }}
-            />
-            <text
-              content={t("devops")}
-              style={{ fg: "blue", marginBottom: 1 }}
-            />
-            <text content={t("maskinlaering")} style={{ fg: "blue" }} />
+          <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
+            <text content={t("selectTag")} style={{ fg: "cyan", attributes: 1, marginBottom: 1 }} />
+            <text content={t("chooseCategory")} style={{ fg: "gray" }} />
           </box>
         ) : (
           <box style={{ flexDirection: "column", height: "100%" }}>
@@ -246,45 +152,19 @@ export const TagsPage = ({
               content={t("articlesTaggedWith", { name: selectedTagName })}
               style={{ fg: "green", attributes: 1, marginBottom: 1 }}
             />
-
             {loading ? (
-              <box
-                style={{
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: "100%",
-                }}
-              >
-                <text content={t("loadingArticles")} style={{ fg: "blue" }} />
-              </box>
+              <text content={t("loadingArticles")} style={{ fg: "blue" }} />
             ) : tagArticles.length === 0 ? (
-              <box
-                style={{
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: "100%",
-                }}
-              >
-                <text content={t("noArticlesFound")} style={{ fg: "yellow" }} />
-              </box>
+              <text content={t("noArticlesFound")} style={{ fg: "yellow" }} />
             ) : (
-              tagArticles.slice(0, 10).map((article, index) => {
-                const metas = [
-                  article.date ? `🗓️ ${article.date}` : null,
-                  article.tags?.length ? `🏷️ ${article.tags.join(", ")}` : null,
-                ].filter(Boolean) as string[];
-                return (
-                  <ArticleCard
-                    key={`${article.title}-${index}`}
-                    data={article}
-                    prefix={`${index + 1}.`}
-                    meta={metas.length > 0 ? metas : undefined}
-                    variant="compact"
-                  />
-                );
-              })
+              tagArticles.slice(0, 10).map((article, index) => (
+                <ArticleCard
+                  key={`${article.title}-${index}`}
+                  data={article}
+                  prefix={`${index + 1}.`}
+                  variant="compact"
+                />
+              ))
             )}
           </box>
         )}

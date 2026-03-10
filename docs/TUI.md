@@ -35,6 +35,14 @@ OpenTUI is a sophisticated TypeScript library for building terminal user interfa
 - **Select/TabSelect**: Dropdown and tab navigation components
 - **Slider**: Range input controls
 
+### Scroll Surfaces (kode24 custom)
+
+- `src/components/ScrollSurface.tsx` centralizes OpenCode-style scroll containers
+- Wraps `<scrollbox>` with `MacOSScrollAccel` for smoother bursts in tall feeds
+- Accepts variants (`panel`, `sidebar`, `translucent`) so pages stay slim for terminal widths
+- Sticky scrolling enabled via `sticky` + `stickyStart` for sidebars without stealing rows
+- Use this wrapper instead of raw `<scrollbox>` when building new panes
+
 **Layout Engine**: Yoga layout integration provides flexbox layout with:
 
 - Automatic sizing and positioning calculations

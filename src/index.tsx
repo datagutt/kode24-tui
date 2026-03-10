@@ -1,53 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { render, useKeyboard, useRenderer } from '@opentui/react';
+import { useState, useEffect } from 'react';
+import { createRoot, useKeyboard } from '@opentui/react';
+import { createCliRenderer } from '@opentui/core';
 import { api } from './services/api.js';
 import { useNavigation } from './hooks/useNavigation.js';
 import { Layout } from './components/Layout.js';
 import { HelpOverlay } from './components/HelpOverlay.js';
+import { TagsOverlay } from './components/TagsOverlay.js';
 import { FrontpagePage } from './pages/FrontpagePage.js';
 import { ArticlePage } from './pages/ArticlePage.js';
 import { ListingsPage } from './pages/ListingsPage.js';
-import { TagsPage, popularTags } from './pages/TagsPage.js';
-import type { Frontpage } from './types/index.js';
+import type { Frontpage, Article, KeyEvent } from './types/index.js';
 import { t } from './i18n/index.js';
-
-type KeyEvent = {
-  name: string;
-  ctrl?: boolean;
-  meta?: boolean;
-  shift?: boolean;
-};
-
-type KeyAwareRenderable = {
-  focused?: boolean;
-  handleKeyPress?: (key: KeyEvent) => boolean;
-};
-
-const hasKeyHandler = (value: unknown): value is KeyAwareRenderable => {
-  if (!value || typeof value !== 'object') {
-    return false;
-  }
-  return typeof (value as { handleKeyPress?: unknown }).handleKeyPress === 'function';
-};
 
 export const App = () => {
   const [frontpageData, setFrontpageData] = useState<Frontpage | null>(null);
+  const [filteredFrontpageData, setFilteredFrontpageData] = useState<Frontpage | null>(null);
+  const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentArticleId, setCurrentArticleId] = useState<string | null>(null);
-  const [selectedTagName, setSelectedTagName] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showTags, setShowTags] = useState(false);
+  const [currentArticleId, setCurrentArticleId] = useState<string | null>(null);
+  const { navigation, navigateToPage, goBack } = useNavigation();
 
-  const { navigation, navigateToPage, goBack, updateSelection } = useNavigation();
-  const renderer = useRenderer();
+  const filterFrontpageByTag = (tagName: string) => {
+    if (!frontpageData) return;
+    const filtered: Frontpage = {
+      ...frontpageData,
+      latestArticles: frontpageData.latestArticles.filter(article => {
+        const tags = article.tags ? article.tags.split(',').map(tag => tag.trim().toLowerCase()) : [];
+        return tags.includes(tagName.toLowerCase());
+      }),
+    };
+    setFilteredFrontpageData(filtered);
+  };
 
+  const clearFilter = () => {
+    setSelectedTagFilter(null);
+    setFilteredFrontpageData(null);
+  };
+
+  const navigateToArticle = (articleId: string) => {
+    setCurrentArticleId(articleId);
+    navigateToPage('article');
+  };
+
+  // Global keyboard handler - only global keys here
   useKeyboard((key: KeyEvent) => {
-    // Check if there's a focused renderable that can handle keyboard events
-    const focusedRenderable = renderer?.currentFocusedRenderable;
-    if (hasKeyHandler(focusedRenderable) && focusedRenderable.focused && focusedRenderable.handleKeyPress?.(key)) {
-      return; // Event was handled by the focused renderable
-    }
-
     if (key.name === 'q') {
       process.exit(0);
     }
@@ -55,6 +54,10 @@ export const App = () => {
     if (key.name === 'escape') {
       if (showHelp) {
         setShowHelp(false);
+      } else if (showTags) {
+        setShowTags(false);
+      } else if (selectedTagFilter && navigation.currentPage === 'frontpage') {
+        clearFilter();
       } else {
         goBack();
       }
@@ -64,137 +67,6 @@ export const App = () => {
     if (key.name === 'h') {
       setShowHelp(!showHelp);
       return;
-    }
-
-    // Navigation for frontpage
-    if (navigation.currentPage === 'frontpage' && frontpageData) {
-      const currentSection = navigation.frontpageSection || 'middle';
-      
-      if (key.name === 'tab') {
-        // Tab between sections: left -> middle -> right -> left
-        const sections = ['left', 'middle', 'right'] as const;
-        const currentIndex = sections.indexOf(currentSection);
-        const nextIndex = (currentIndex + 1) % sections.length;
-        updateSelection(navigation.selectedIndex, navigation.selectedSection, sections[nextIndex]);
-        return;
-      }
-
-      if (currentSection === 'left') {
-        // Left sidebar navigation (tags)
-        if (key.name === 'up' && navigation.selectedIndex > 0) {
-          updateSelection(navigation.selectedIndex - 1, navigation.selectedSection, 'left');
-        }
-        if (key.name === 'down' && navigation.selectedIndex < popularTags.length - 1) {
-          updateSelection(navigation.selectedIndex + 1, navigation.selectedSection, 'left');
-        }
-        if (key.name === 'return') {
-          // Navigate to tag
-          navigateToPage('tags');
-        }
-      } else if (currentSection === 'middle') {
-        // Middle section navigation (main articles)
-        if (key.name === 'up' && navigation.selectedIndex > 0) {
-          updateSelection(navigation.selectedIndex - 1, navigation.selectedSection, 'middle');
-        }
-        if (key.name === 'down' && navigation.selectedIndex < frontpageData.latestArticles.length - 1) {
-          updateSelection(navigation.selectedIndex + 1, navigation.selectedSection, 'middle');
-        }
-        if (key.name === 'left' && navigation.selectedSection > 0) {
-          const nextSection = navigation.selectedSection - 1;
-          const nextIndex = (() => {
-            const section = frontpageData.frontpage[nextSection];
-            const firstArticleId = section?.articles[0]?.id;
-            if (!firstArticleId) {
-              return navigation.selectedIndex;
-            }
-            const matchIndex = frontpageData.latestArticles.findIndex(
-              (article) => article.id === firstArticleId
-            );
-            if (matchIndex >= 0) {
-              return matchIndex;
-            }
-            return navigation.selectedIndex;
-          })();
-          const clamped = Math.min(
-            Math.max(nextIndex, 0),
-            frontpageData.latestArticles.length - 1
-          );
-          updateSelection(clamped, nextSection, 'middle');
-        }
-        if (key.name === 'right' && navigation.selectedSection < frontpageData.frontpage.length - 1) {
-          const nextSection = navigation.selectedSection + 1;
-          const nextIndex = (() => {
-            const section = frontpageData.frontpage[nextSection];
-            const firstArticleId = section?.articles[0]?.id;
-            if (!firstArticleId) {
-              return navigation.selectedIndex;
-            }
-            const matchIndex = frontpageData.latestArticles.findIndex(
-              (article) => article.id === firstArticleId
-            );
-            if (matchIndex >= 0) {
-              return matchIndex;
-            }
-            return navigation.selectedIndex;
-          })();
-          const clamped = Math.min(
-            Math.max(nextIndex, 0),
-            frontpageData.latestArticles.length - 1
-          );
-          updateSelection(clamped, nextSection, 'middle');
-        }
-        if (key.name === 'return') {
-          // Navigate to selected article
-          const selectedArticle = frontpageData.latestArticles[navigation.selectedIndex];
-          if (selectedArticle) {
-            navigateToArticle(selectedArticle.id);
-          }
-        }
-      } else if (currentSection === 'right') {
-        // Right sidebar navigation (jobs/events)
-        const totalItems = frontpageData.jobs.length + frontpageData.events.upcomingEvents.length + frontpageData.newestComments.length + 1; // +1 for "view all jobs"
-        if (key.name === 'up' && navigation.selectedIndex > 0) {
-          updateSelection(navigation.selectedIndex - 1, navigation.selectedSection, 'right');
-        }
-        if (key.name === 'down' && navigation.selectedIndex < totalItems - 1) {
-          updateSelection(navigation.selectedIndex + 1, navigation.selectedSection, 'right');
-        }
-        if (key.name === 'return') {
-          // Handle selection based on index
-          if (navigation.selectedIndex < frontpageData.jobs.length) {
-            // Selected a job
-            navigateToPage('listings');
-          } else if (navigation.selectedIndex === totalItems - 1) {
-            // Selected "view all jobs"
-            navigateToPage('listings');
-          }
-        }
-      }
-
-      // Global shortcuts
-      if (key.name === 'l') {
-        navigateToPage('listings');
-      }
-      if (key.name === 't') {
-        navigateToPage('tags');
-      }
-      if (key.name === 'e') {
-        navigateToPage('events');
-      }
-    }
-
-    // Navigation for tags
-    if (navigation.currentPage === 'tags') {
-      if (key.name === 'up' && navigation.selectedIndex > 0) {
-        updateSelection(navigation.selectedIndex - 1);
-      }
-      if (key.name === 'down' && navigation.selectedIndex < popularTags.length - 1) {
-        updateSelection(navigation.selectedIndex + 1);
-      }
-      if (key.name === 'return') {
-        // Select the tag
-        setSelectedTagName(popularTags[navigation.selectedIndex].name);
-      }
     }
   });
 
@@ -210,26 +82,21 @@ export const App = () => {
         setLoading(false);
       }
     }
-
     fetchFrontpage();
   }, []);
 
-  const navigateToArticle = (articleId: string) => {
-    setCurrentArticleId(articleId);
-    navigateToPage('article');
-  };
+  useEffect(() => {
+    if (navigation.currentPage !== 'article') {
+      setCurrentArticleId(null);
+    }
+  }, [navigation.currentPage]);
 
-  const navigateToListings = () => {
-    navigateToPage('listings');
-  };
-
-  const navigateToTags = () => {
-    navigateToPage('tags');
-  };
-
-  const navigateToEvents = () => {
-    navigateToPage('events');
-  };
+  useEffect(() => {
+    if (navigation.currentPage !== 'frontpage' && selectedTagFilter) {
+      setSelectedTagFilter(null);
+      setFilteredFrontpageData(null);
+    }
+  }, [navigation.currentPage, selectedTagFilter]);
 
   if (loading) {
     return (
@@ -241,80 +108,56 @@ export const App = () => {
     );
   }
 
-  if (error) {
+  if (error || !frontpageData) {
     return (
       <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
         <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
-          <text content={`Error: ${error}`} style={{ fg: 'red' }} />
+          <text content={error ? `Error: ${error}` : t('noDataAvailable')} style={{ fg: 'red' }} />
           <text content={t('pressQToQuit')} style={{ fg: 'gray' }} marginTop={1} />
         </box>
       </Layout>
     );
   }
 
-  if (!frontpageData) {
-    return (
-      <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
-        <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
-          <text content={t('noDataAvailable')} style={{ fg: 'yellow' }} />
-        </box>
-      </Layout>
-    );
-  }
+  const handleTagSelect = (tagName: string) => {
+    setSelectedTagFilter(tagName);
+    filterFrontpageByTag(tagName);
+  };
+
+  const activeData = filteredFrontpageData || frontpageData;
+  const overlaysOpen = showHelp || showTags;
 
   const renderCurrentPage = () => {
     switch (navigation.currentPage) {
       case 'frontpage':
         return (
           <FrontpagePage
-            frontpageData={frontpageData}
-            selectedSection={navigation.selectedSection}
-            selectedArticle={navigation.frontpageSection === 'middle' ? navigation.selectedIndex : 0}
-            frontpageSection={navigation.frontpageSection || 'middle'}
-            selectedTagIndex={navigation.frontpageSection === 'left' ? navigation.selectedIndex : 0}
-            selectedSidebarIndex={navigation.frontpageSection === 'right' ? navigation.selectedIndex : 0}
+            frontpageData={activeData}
+            selectedTagFilter={selectedTagFilter}
             onNavigateToArticle={navigateToArticle}
-            onNavigateToListings={navigateToListings}
+            onNavigateToListings={() => navigateToPage('listings')}
+            onNavigateToEvents={() => navigateToPage('events')}
+            onToggleTags={() => setShowTags(true)}
+            onClearFilter={clearFilter}
+            isActive={!overlaysOpen}
           />
         );
-      
+
       case 'article':
         return currentArticleId ? (
-          <ArticlePage
-            articleId={currentArticleId}
-            onBack={goBack}
-          />
+          <ArticlePage articleId={currentArticleId} onBack={goBack} />
         ) : (
           <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
             <text content={t('noArticleSelected')} style={{ fg: 'yellow' }} />
             <text content={t('pressEscToGoBack')} style={{ fg: 'gray', marginTop: 1 }} />
           </box>
         );
-      
+
       case 'listings':
         return (
-          <ListingsPage
-            initialJobs={frontpageData.jobs}
-            selectedJob={navigation.selectedIndex}
-            onJobSelect={(jobId: string) => {
-              // Could navigate to job details page in future
-              console.log('Selected job:', jobId);
-            }}
-          />
+          <ListingsPage initialJobs={frontpageData.jobs} />
         );
-      
-      case 'tags':
-        return (
-          <TagsPage
-            selectedTag={navigation.selectedIndex}
-            selectedTagName={selectedTagName}
-            onTagSelect={(tag: string) => {
-              // Could navigate to tag articles view
-              console.log('Selected tag:', tag);
-            }}
-          />
-        );
-      
+
       case 'events':
         return (
           <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
@@ -322,7 +165,7 @@ export const App = () => {
             <text content={t('pressEscToGoBack')} style={{ fg: 'gray' }} marginTop={1} />
           </box>
         );
-      
+
       default:
         return (
           <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
@@ -334,10 +177,18 @@ export const App = () => {
 
   return (
     <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
-      {renderCurrentPage()}
       {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
+      {showTags && (
+        <TagsOverlay
+          onClose={() => setShowTags(false)}
+          onSelectTag={handleTagSelect}
+          selectedTagFilter={selectedTagFilter}
+        />
+      )}
+      {renderCurrentPage()}
     </Layout>
   );
 };
 
-render(<App />);
+const renderer = await createCliRenderer();
+createRoot(renderer).render(<App />);

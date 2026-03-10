@@ -1,248 +1,228 @@
-import React, { useRef, useEffect, useMemo } from "react";
-import type { Frontpage } from "../types/index.js";
+import { useState, useMemo, useEffect } from "react";
+import { useKeyboard } from "@opentui/react";
+import type { Frontpage, Article, Panel, KeyEvent } from "../types/index.js";
 import { colors, themeColors } from "../theme/colors.js";
-import type { ScrollBoxRenderable } from "@opentui/core";
+import { useListNavigation } from "../hooks/useListNavigation.js";
 import { t } from "../i18n/index.js";
 import { JobCard } from "../components/JobCard.js";
 import { ArticleCard } from "../components/ArticleCard.js";
-import { popularTags } from "./TagsPage.js";
-
-type FrontpageArticle = Frontpage["latestArticles"][number];
-type FrontpageSection = Frontpage["frontpage"][number];
-
-type ContentBlock =
-  | {
-      type: "articles";
-      articles: FrontpageArticle[];
-      chunkIndex: number;
-      startIndex: number;
-    }
-  | {
-      type: "section";
-      section: FrontpageSection;
-      sectionIndex: number;
-    };
+import ScrollSurface from "../components/ScrollSurface.js";
 
 interface FrontpagePageProps {
   frontpageData: Frontpage;
-  selectedSection: number;
-  selectedArticle: number;
-  frontpageSection: 'left' | 'middle' | 'right';
-  selectedTagIndex?: number;
-  selectedSidebarIndex?: number;
+  selectedTagFilter: string | null;
   onNavigateToArticle: (articleId: string) => void;
   onNavigateToListings: () => void;
+  onNavigateToEvents: () => void;
+  onToggleTags: () => void;
+  onClearFilter: () => void;
+  isActive: boolean;
 }
+
+const SIDEBAR_LIMITS = { jobs: 3, events: 2, comments: 2 };
+
+const formatDate = (value: Date | string): string => {
+  if (value instanceof Date) return value.toLocaleDateString();
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? String(value) : new Date(parsed).toLocaleDateString();
+};
+
+// Split articles into hero (width >= 50) and stream.
+// Only consecutive leading articles with large width become hero — once we hit
+// a smaller article, everything from there on goes to stream.
+const splitArticles = (articles: Article[]): { hero: Article[]; stream: Article[] } => {
+  let heroCount = 0;
+  for (const article of articles) {
+    if (heroCount >= 3) break;
+    if (typeof article.width === 'number' && article.width >= 50) {
+      heroCount++;
+    } else {
+      break;
+    }
+  }
+  return {
+    hero: articles.slice(0, heroCount),
+    stream: articles.slice(heroCount),
+  };
+};
 
 export const FrontpagePage = ({
   frontpageData,
-  selectedSection,
-  selectedArticle,
-  frontpageSection,
-  selectedTagIndex = 0,
-  selectedSidebarIndex = 0,
+  selectedTagFilter,
   onNavigateToArticle,
   onNavigateToListings,
+  onNavigateToEvents,
+  onToggleTags,
+  onClearFilter,
+  isActive,
 }: FrontpagePageProps) => {
-  const sectionsRef = useRef<ScrollBoxRenderable>(null);
+  const [panel, setPanel] = useState<Panel>('main');
+  const [mainIndex, setMainIndex] = useState(0);
+  const [sidebarIndex, setSidebarIndex] = useState(0);
 
-  const chunkPattern = [3, 2] as const;
-  const totalSections = frontpageData.frontpage.length;
+  const { hero, stream } = useMemo(
+    () => splitArticles(frontpageData.latestArticles),
+    [frontpageData.latestArticles]
+  );
 
-  const clampSectionArticles = (
-    section: FrontpageSection
-  ): FrontpageArticle[] => {
-    const parsed = Number.parseInt(section.antall, 10);
-    const limit = Number.isNaN(parsed)
-      ? section.articles.length
-      : parsed;
-    return section.articles.slice(0, limit);
-  };
+  // Total navigable articles: hero + stream
+  const allArticles = useMemo(() => [...hero, ...stream], [hero, stream]);
+  const totalArticles = allArticles.length;
 
-  const heroRowHeight = 7;
-  const compactRowHeight = 5;
-  const sectionRowHeight = 5;
-  const blockHeaderHeight = 2;
-  const blockGapHeight = 1;
+  // Sidebar items: jobs + "view all" + events + comments
+  const visibleJobs = useMemo(
+    () => frontpageData.jobs.slice(0, SIDEBAR_LIMITS.jobs),
+    [frontpageData.jobs]
+  );
+  const visibleEvents = useMemo(
+    () => frontpageData.events.upcomingEvents.slice(0, SIDEBAR_LIMITS.events),
+    [frontpageData.events.upcomingEvents]
+  );
+  const visibleComments = useMemo(
+    () => frontpageData.newestComments.slice(0, SIDEBAR_LIMITS.comments),
+    [frontpageData.newestComments]
+  );
+  const totalSidebarItems = visibleJobs.length + 1 + visibleEvents.length + visibleComments.length;
 
-  const buildContentBlocks = (
-    articles: FrontpageArticle[],
-    sections: FrontpageSection[],
-    pattern: readonly number[],
-    chunkIndex = 0,
-    startIndex = 0,
-    acc: ContentBlock[] = []
-  ): ContentBlock[] => {
-    if (articles.length === 0) {
-      if (sections.length === 0) {
-        return acc;
+  // Indices for sidebar sections
+  const viewAllJobsIndex = visibleJobs.length;
+  const eventBaseIndex = viewAllJobsIndex + 1;
+  const commentBaseIndex = eventBaseIndex + visibleEvents.length;
+
+  // Stream scrollbox navigation (hero items aren't in the scrollbox)
+  const streamScrollRef = useListNavigation({
+    selectedIndex: Math.max(0, mainIndex - hero.length),
+    isActive: panel === 'main' && mainIndex >= hero.length,
+    buffer: 2,
+  });
+
+  const sidebarScrollRef = useListNavigation({
+    selectedIndex: sidebarIndex,
+    isActive: panel === 'sidebar',
+    buffer: 2,
+  });
+
+  // Responsive: detect narrow terminals
+  const [terminalWidth, setTerminalWidth] = useState(() => process.stdout?.columns ?? 120);
+  useEffect(() => {
+    const output = process.stdout;
+    if (!output?.on) return;
+    const update = () => setTerminalWidth(output.columns ?? 120);
+    output.on("resize", update);
+    return () => { output.off?.("resize", update); };
+  }, []);
+  const showSidebar = terminalWidth >= 80;
+
+  // Keyboard handling - frontpage owns its own keys
+  useKeyboard((key: KeyEvent) => {
+    if (!isActive) return;
+
+    if (key.name === 'tab') {
+      if (showSidebar) setPanel(p => p === 'main' ? 'sidebar' : 'main');
+      return;
+    }
+
+    if (key.name === 't') {
+      onToggleTags();
+      return;
+    }
+
+    if (key.name === 'l') {
+      onNavigateToListings();
+      return;
+    }
+
+    if (key.name === 'e') {
+      onNavigateToEvents();
+      return;
+    }
+
+    if (key.name === 'c' && selectedTagFilter) {
+      onClearFilter();
+      return;
+    }
+
+    if (panel === 'main') {
+      if (key.name === 'up' && mainIndex > 0) {
+        setMainIndex(mainIndex - 1);
+      } else if (key.name === 'down' && mainIndex < totalArticles - 1) {
+        setMainIndex(mainIndex + 1);
+      } else if (key.name === 'return') {
+        const article = allArticles[mainIndex];
+        if (article) onNavigateToArticle(article.id);
       }
-      const [nextSection, ...restSections] = sections;
-      const sectionIndex = totalSections - sections.length;
-      const nextAcc: ContentBlock[] = [
-        ...acc,
-        { type: "section", section: nextSection, sectionIndex },
-      ];
-      return buildContentBlocks(
-        articles,
-        restSections,
-        pattern,
-        chunkIndex,
-        startIndex,
-        nextAcc
-      );
+      return;
     }
 
-    const size = pattern[chunkIndex % pattern.length];
-    const chunk = articles.slice(0, size);
-    const remainingArticles = articles.slice(chunk.length);
-    const chunkBlock: ContentBlock = {
-      type: "articles",
-      articles: chunk,
-      chunkIndex,
-      startIndex,
-    };
-    const nextAcc = [...acc, chunkBlock];
-
-    if (chunkIndex !== 0 && sections.length > 0) {
-      const [nextSection, ...restSections] = sections;
-      const sectionIndex = totalSections - sections.length;
-      const withSection: ContentBlock[] = [
-        ...nextAcc,
-        { type: "section", section: nextSection, sectionIndex },
-      ];
-      return buildContentBlocks(
-        remainingArticles,
-        restSections,
-        pattern,
-        chunkIndex + 1,
-        startIndex + chunk.length,
-        withSection
-      );
+    if (panel === 'sidebar') {
+      if (key.name === 'up' && sidebarIndex > 0) {
+        setSidebarIndex(sidebarIndex - 1);
+      } else if (key.name === 'down' && sidebarIndex < totalSidebarItems - 1) {
+        setSidebarIndex(sidebarIndex + 1);
+      } else if (key.name === 'return') {
+        if (sidebarIndex <= viewAllJobsIndex) {
+          onNavigateToListings();
+        } else if (sidebarIndex < commentBaseIndex) {
+          onNavigateToEvents();
+        }
+      }
+      return;
     }
+  });
 
-    return buildContentBlocks(
-      remainingArticles,
-      sections,
-      pattern,
-      chunkIndex + 1,
-      startIndex + chunk.length,
-      nextAcc
+  // Reset selection when data changes (tag filter)
+  useEffect(() => {
+    setMainIndex(0);
+  }, [frontpageData.latestArticles]);
+
+  const renderHeroArticle = (article: Article, index: number) => {
+    const isSelected = panel === 'main' && mainIndex === index;
+    const tags = article.tags ? article.tags.split(",").map(tag => tag.trim()).filter(Boolean).slice(0, 3) : [];
+    return (
+      <ArticleCard
+        key={article.id}
+        data={{
+          title: article.title,
+          subtitle: article.subtitle,
+          author: article.byline.name,
+          date: formatDate(article.published),
+          reactions: article.reactions.reactions_count,
+          comments: article.reactions.comments_count,
+          tags,
+        }}
+        selected={isSelected}
+        variant="hero"
+      />
     );
   };
 
-  const contentBlocks = useMemo(
-    () =>
-      buildContentBlocks(
-        frontpageData.latestArticles,
-        frontpageData.frontpage,
-        chunkPattern
-      ),
-    [frontpageData.frontpage, frontpageData.latestArticles]
-  );
-
-  const metrics = useMemo(() => {
-    const articleOffsets: Record<string, { top: number; height: number }> = {};
-    const sectionOffsets = new Map<number, { top: number; height: number }>();
-    let offset = 0;
-    contentBlocks.forEach((block) => {
-      const blockStart = offset;
-      offset += blockHeaderHeight;
-      if (block.type === "articles") {
-        const rowHeight = block.chunkIndex === 0 ? heroRowHeight : compactRowHeight;
-        block.articles.forEach((article) => {
-          articleOffsets[article.id] = { top: offset, height: rowHeight };
-          offset += rowHeight;
-        });
-      } else {
-        const items = clampSectionArticles(block.section);
-        items.forEach((article) => {
-          articleOffsets[article.id] = { top: offset, height: sectionRowHeight };
-          offset += sectionRowHeight;
-        });
-        sectionOffsets.set(block.sectionIndex, {
-          top: blockStart,
-          height: offset - blockStart,
-        });
-      }
-      offset += blockGapHeight;
-    });
-    return { articleOffsets, sectionOffsets };
-  }, [contentBlocks]);
-
-  const selectedArticleId = useMemo(
-    () => frontpageSection === 'middle' ? frontpageData.latestArticles[selectedArticle]?.id ?? null : null,
-    [frontpageData.latestArticles, selectedArticle, frontpageSection]
-  );
-
-  useEffect(() => {
-    if (!sectionsRef.current || frontpageSection !== 'middle') {
-      return;
-    }
-    const sectionMetrics = metrics.sectionOffsets.get(selectedSection);
-    if (!sectionMetrics) {
-      return;
-    }
-    const scrollTop = sectionsRef.current.scrollTop ?? 0;
-    const viewportHeight =
-      typeof sectionsRef.current.height === "number"
-        ? sectionsRef.current.height
-        : 60;
-    const buffer = 2;
-    const top = sectionMetrics.top;
-    const bottom = sectionMetrics.top + sectionMetrics.height;
-    const viewBottom = scrollTop + viewportHeight;
-    if (top < scrollTop + buffer) {
-      sectionsRef.current.scrollTop = Math.max(0, top - buffer);
-      return;
-    }
-    if (bottom > viewBottom - buffer) {
-      sectionsRef.current.scrollTop = Math.max(
-        0,
-        bottom - viewportHeight + buffer
-      );
-    }
-  }, [metrics, selectedSection, frontpageSection]);
-
-  useEffect(() => {
-    if (!sectionsRef.current || !selectedArticleId || frontpageSection !== 'middle') {
-      return;
-    }
-    const articleMetrics = metrics.articleOffsets[selectedArticleId];
-    if (!articleMetrics) {
-      return;
-    }
-    const scrollTop = sectionsRef.current.scrollTop ?? 0;
-    const viewportHeight =
-      typeof sectionsRef.current.height === "number"
-        ? sectionsRef.current.height
-        : 60;
-    const buffer = 2;
-    const top = articleMetrics.top;
-    const bottom = articleMetrics.top + articleMetrics.height;
-    const viewBottom = scrollTop + viewportHeight;
-    if (top < scrollTop + buffer) {
-      sectionsRef.current.scrollTop = Math.max(0, top - buffer);
-      return;
-    }
-    if (bottom > viewBottom - buffer) {
-      sectionsRef.current.scrollTop = Math.max(
-        0,
-        bottom - viewportHeight + buffer
-      );
-    }
-  }, [metrics, selectedArticleId, frontpageSection]);
-
-  const formatArticleDate = (value: Date | string): string => {
-    if (value instanceof Date) {
-      return value.toLocaleDateString();
-    }
-    const parsed = Date.parse(value);
-    if (Number.isNaN(parsed)) {
-      return value;
-    }
-    return new Date(parsed).toLocaleDateString();
+  const renderStreamArticle = (article: Article, streamIndex: number) => {
+    const globalIndex = hero.length + streamIndex;
+    const isSelected = panel === 'main' && mainIndex === globalIndex;
+    const tags = article.tags ? article.tags.split(",").map(tag => tag.trim()).filter(Boolean).slice(0, 3) : [];
+    return (
+      <ArticleCard
+        key={article.id}
+        data={{
+          title: article.title,
+          subtitle: streamIndex < 3 ? article.subtitle : undefined,
+          author: article.byline.name,
+          date: formatDate(article.published),
+          reactions: streamIndex < 3 ? article.reactions.reactions_count : undefined,
+          comments: streamIndex < 3 ? article.reactions.comments_count : undefined,
+          tags: streamIndex < 3 ? tags : undefined,
+        }}
+        prefix={`${streamIndex + 1}.`}
+        selected={isSelected}
+        variant={streamIndex < 3 ? 'default' : 'compact'}
+        footnote={isSelected ? t("pressEnter") : undefined}
+      />
+    );
   };
+
+  const headerText = selectedTagFilter
+    ? `🏷️ #${selectedTagFilter}`
+    : t("latestArticles");
 
   return (
     <box
@@ -253,389 +233,169 @@ export const FrontpagePage = ({
         backgroundColor: themeColors.navigation.background,
       }}
     >
-      {/*<box
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: 1,
-          border: true,
-          borderColor: themeColors.navigation.selected,
-          backgroundColor: themeColors.navigation.selected,
-        }}
-      >
-        <box style={{ flexDirection: "column" }}>
-          <text
-            content={t("latestArticles")}
-            style={{ fg: themeColors.navigation.selectedText, marginTop: 0 }}
-          />
-        </box>
-        <box style={{ flexDirection: "row" }}>
-          <text
-            content={`📰 ${totalArticles} ${t("articles")}`}
-            style={{ fg: themeColors.navigation.selectedText, marginRight: 2 }}
-          />
-          <text
-            content={`💼 ${totalJobs} ${t("jobListings")}`}
-            style={{ fg: themeColors.navigation.selectedText, marginRight: 2 }}
-          />
-          <text
-            content={`📅 ${totalEvents} ${t("upcomingEvents")}`}
-            style={{ fg: themeColors.navigation.selectedText }}
-          />
-        </box>
-      </box>*/}
-
-      <box
-        style={{
-          flexDirection: "row",
-          width: "100%",
-          height: "100%",
-          padding: 1,
-        }}
-      >
+      {/* Tag filter indicator */}
+      {selectedTagFilter && (
         <box
           style={{
-            width: 28,
-            backgroundColor: frontpageSection === 'left' ? themeColors.navigation.selected : themeColors.navigation.background,
-            border: true,
-            borderColor: frontpageSection === 'left' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-            flexDirection: "column",
+            height: 3,
+            width: "100%",
+            backgroundColor: themeColors.tag.background,
             padding: 1,
           }}
         >
           <text
-            content={t("categoriesTags")}
-            style={{ 
-              fg: frontpageSection === 'left' ? themeColors.navigation.selectedText : themeColors.navigation.normal, 
-              attributes: 1 
-            }}
+            content={`🏷️ Filtrerer: #${selectedTagFilter} (c = fjern, esc = tilbake)`}
+            style={{ fg: themeColors.tag.name, attributes: 1 }}
           />
-          <scrollbox style={{ height: "80%", marginTop: 1 }}>
-            {popularTags.map((tag, index) => {
-              const isSelected = frontpageSection === 'left' && index === selectedTagIndex;
-              return (
-                <box
-                  key={tag.name}
-                  style={{
-                    marginBottom: 1,
-                    padding: 1,
-                    border: true,
-                    borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-                    backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
-                  }}
-                >
-                  <text
-                    content={`#${tag.name}`}
-                    style={{ 
-                      fg: isSelected ? themeColors.navigation.background : themeColors.tag.name, 
-                      attributes: 1 
-                    }}
-                  />
-                </box>
-              );
-            })}
-          </scrollbox>
         </box>
+      )}
 
-        <box
-          style={{
-            flexDirection: "column",
-            width: "60%",
-            marginLeft: 1,
-            marginRight: 1,
-          }}
-        >
-          <scrollbox
-            ref={sectionsRef}
-            style={{
-              height: "100%",
-              border: true,
-              borderColor: frontpageSection === 'middle' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-              backgroundColor: frontpageSection === 'middle' ? themeColors.navigation.selected : 'transparent',
-              padding: 1,
-            }}
-          >
-            {contentBlocks.map((block, blockIndex) => {
-              if (block.type === "articles") {
-                const heading =
-                  block.chunkIndex === 0
-                    ? t("latestArticles")
-                    : t("moreFrontpageArticles");
-                return (
-                  <box
-                    key={`articles-${blockIndex}`}
-                    style={{
-                      flexDirection: "column",
-                      border: true,
-                      borderColor: themeColors.navigation.selected,
-                      padding: 1,
-                      marginBottom: 1,
-                      backgroundColor: colors.surface.card,
-                    }}
-                  >
-                    <text
-                      content={heading}
-                      style={{
-                        fg: themeColors.navigation.normal,
-                        attributes: block.chunkIndex === 0 ? 1 : 0,
-                      }}
-                    />
-                    <box style={{ flexDirection: "column", marginTop: 1 }}>
-                      {block.articles.map((article, articleIndex) => {
-                        const tags = article.tags
-                          ? article.tags
-                              .split(",")
-                              .map((tag) => tag.trim())
-                              .filter(Boolean)
-                              .slice(0, 3)
-                          : [];
-                        const globalIndex = block.startIndex + articleIndex;
-                        const isSelected = globalIndex === selectedArticle;
-                        return (
-                          <ArticleCard
-                            key={article.id}
-                            data={{
-                              title: article.title,
-                              subtitle: article.subtitle,
-                              author: article.byline.name,
-                              date: formatArticleDate(article.published),
-                              reactions: article.reactions.reactions_count,
-                              comments: article.reactions.comments_count,
-                              tags,
-                            }}
-                            prefix={`${globalIndex + 1}.`}
-                            selected={isSelected}
-                            footnote={
-                              isSelected ? t("pressEnter") : undefined
-                            }
-                            variant={block.chunkIndex === 0 ? "default" : "compact"}
-                          />
-                        );
-                      })}
-                    </box>
-                  </box>
-                );
+      {/* Hero section - full width, fixed height based on hero count */}
+      {hero.length > 0 && !selectedTagFilter && (
+        <box style={{ flexDirection: "column", height: hero.length * 10, flexShrink: 0 }}>
+          {hero.map((article, index) => renderHeroArticle(article, index))}
+        </box>
+      )}
+
+      {/* Main content area: stream + sidebar */}
+      <box style={{ flexDirection: "row", width: "100%", flexGrow: 1 }}>
+        {/* Article stream */}
+        <box style={{ flexDirection: "column", width: showSidebar ? "75%" : "100%", marginRight: showSidebar ? 1 : 0 }}>
+          <box style={{ marginBottom: 1, padding: 1 }}>
+            <text content={headerText} style={{ fg: themeColors.navigation.normal, attributes: 1 }} />
+            {stream.length > 0 && (
+              <text
+                content={`  (${stream.length})`}
+                style={{ fg: themeColors.navigation.normal }}
+              />
+            )}
+          </box>
+
+          {totalArticles === 0 && selectedTagFilter ? (
+            <box style={{ flexDirection: "column", alignItems: "center", padding: 2 }}>
+              <text content={`Ingen artikler for #${selectedTagFilter}`} style={{ fg: 'yellow', attributes: 1 }} />
+              <text content="Trykk 'c' eller Esc for å fjerne filter" style={{ fg: 'gray', marginTop: 1 }} />
+            </box>
+          ) : (
+            <ScrollSurface
+              ref={streamScrollRef}
+              focused={panel === 'main'}
+              variant="panel"
+              padding={1}
+              width="100%"
+            >
+              {/* When tag filtered, show all articles in stream (no hero split) */}
+              {selectedTagFilter
+                ? allArticles.map((article, index) => renderStreamArticle(article, index))
+                : stream.map((article, index) => renderStreamArticle(article, index))
               }
-
-              const isFocus = block.sectionIndex === selectedSection;
-              const focusBg = isFocus
-                ? themeColors.navigation.selected
-                : colors.surface.card;
-              const titleFg = isFocus
-                ? themeColors.navigation.selectedText
-                : themeColors.navigation.normal;
-              const items = clampSectionArticles(block.section);
-              const tagLabel = block.section.tags1
-                ? `#${block.section.tags1}`
-                : undefined;
-              return (
-                <box
-                  key={`section-${block.section.title}-${blockIndex}`}
-                  style={{
-                    flexDirection: "column",
-                    border: true,
-                    borderColor: themeColors.navigation.selected,
-                    padding: 1,
-                    marginBottom: 1,
-                    backgroundColor: focusBg,
-                  }}
-                >
-                  <text
-                    content={block.section.title}
-                    style={{ fg: titleFg, attributes: 1 }}
-                  />
-                  {block.section.description ? (
-                    <text
-                      content={block.section.description}
-                      style={{ fg: themeColors.navigation.normal, marginTop: 0 }}
-                    />
-                  ) : null}
-                  {tagLabel ? (
-                    <text
-                      content={tagLabel}
-                      style={{ fg: themeColors.tag.name, marginTop: 1 }}
-                    />
-                  ) : null}
-                  <box style={{ flexDirection: "column", marginTop: 1 }}>
-                    {items.map((article, articleIndex) => {
-                      const tags = article.tags
-                        ? article.tags
-                            .split(",")
-                            .map((tag) => tag.trim())
-                            .filter(Boolean)
-                            .slice(0, 3)
-                        : [];
-                      const isSelected = article.id === selectedArticleId;
-                      return (
-                        <ArticleCard
-                          key={article.id}
-                          data={{
-                            title: article.title,
-                            subtitle: article.subtitle,
-                            author: article.byline.name,
-                            date: formatArticleDate(article.published),
-                            reactions: article.reactions.reactions_count,
-                            comments: article.reactions.comments_count,
-                            tags,
-                          }}
-                          prefix={`${articleIndex + 1}.`}
-                          selected={isSelected}
-                          footnote={
-                            isSelected ? t("pressEnter") : undefined
-                          }
-                          variant="compact"
-                        />
-                      );
-                    })}
-                  </box>
-                </box>
-              );
-            })}
-          </scrollbox>
+            </ScrollSurface>
+          )}
         </box>
 
-        <box
-          style={{
-            width: 32,
-            border: true,
-            borderColor: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-            backgroundColor: frontpageSection === 'right' ? themeColors.navigation.selected : colors.surface.raised,
-            flexDirection: "column",
-            padding: 1,
-          }}
-        >
-          <scrollbox style={{ height: "100%" }}>
-            <text
-              content={t("recentJobs")}
-              style={{ 
-                fg: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.normal, 
-                attributes: 1 
-              }}
-            />
-            {frontpageData.jobs.slice(0, 4).map((job, index) => {
-              const isSelected = frontpageSection === 'right' && index === selectedSidebarIndex;
-              return (
-                <box
+        {/* Sidebar */}
+        {showSidebar && (
+          <box style={{ width: "25%", flexDirection: "column" }}>
+            <box style={{ marginBottom: 1, padding: 1 }}>
+              <text
+                content={panel === 'sidebar' ? "▶ Sidebar" : "  Sidebar"}
+                style={{ fg: themeColors.navigation.normal, attributes: panel === 'sidebar' ? 1 : 0 }}
+              />
+            </box>
+
+            <ScrollSurface
+              ref={sidebarScrollRef}
+              variant="sidebar"
+              focused={panel === 'sidebar'}
+              width="100%"
+            >
+              {/* Jobs */}
+              <text content="💼 Jobber" style={{ fg: themeColors.navigation.normal, attributes: 1, marginBottom: 1 }} />
+              {visibleJobs.map((job, index) => (
+                <JobCard
                   key={job.id}
-                  style={{
-                    border: true,
-                    borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-                    backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
-                    marginTop: 1,
-                    padding: 1,
-                  }}
-                >
-                  <JobCard job={job} variant="compact" />
-                </box>
-              );
-            })}
+                  job={job}
+                  selected={panel === 'sidebar' && index === sidebarIndex}
+                  variant="compact"
+                />
+              ))}
 
-            <text
-              content={t("upcomingEvents")}
-              style={{
-                fg: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.normal,
-                attributes: 1,
-                marginTop: 2,
-              }}
-            />
-            {frontpageData.events.upcomingEvents.slice(0, 3).map((event, index) => {
-              const globalIndex = frontpageData.jobs.length + index;
-              const isSelected = frontpageSection === 'right' && globalIndex === selectedSidebarIndex;
-              return (
-                <box
-                  key={event.name}
+              {/* View All Jobs */}
+              <box
+                style={{
+                  marginTop: 1,
+                  marginBottom: 2,
+                  padding: 1,
+                  border: true,
+                  borderColor: panel === 'sidebar' && sidebarIndex === viewAllJobsIndex
+                    ? themeColors.navigation.selectedText
+                    : themeColors.navigation.selected,
+                  backgroundColor: panel === 'sidebar' && sidebarIndex === viewAllJobsIndex
+                    ? themeColors.navigation.selectedText
+                    : colors.surface.card,
+                }}
+              >
+                <text
+                  content={`→ ${t("viewAllJobs")}`}
                   style={{
-                    border: true,
-                    borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-                    marginTop: 1,
-                    padding: 1,
-                    backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
+                    fg: panel === 'sidebar' && sidebarIndex === viewAllJobsIndex
+                      ? themeColors.navigation.background
+                      : themeColors.navigation.normal,
+                    attributes: 1,
                   }}
-                >
-                  <text
-                    content={event.name}
-                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.selectedText }}
-                  />
-                  <text
-                    content={event.arrangedBy}
-                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
-                  />
-                  <text
-                    content={event.startDateFormatted}
-                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
-                  />
-                </box>
-              );
-            })}
+                />
+              </box>
 
-            <text
-              content={t("recentComments")}
-              style={{
-                fg: frontpageSection === 'right' ? themeColors.navigation.selectedText : themeColors.navigation.normal,
-                attributes: 1,
-                marginTop: 2,
-              }}
-            />
-            {frontpageData.newestComments.slice(0, 3).map((comment, index) => {
-              const globalIndex = frontpageData.jobs.length + frontpageData.events.upcomingEvents.length + index;
-              const isSelected = frontpageSection === 'right' && globalIndex === selectedSidebarIndex;
-              return (
-                <box
-                  key={comment.page_identifier}
-                  style={{
-                    border: true,
-                    borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-                    marginTop: 1,
-                    padding: 1,
-                    backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
-                  }}
-                >
-                  <text
-                    content={comment.user.name}
-                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.selectedText }}
-                  />
-                  <text
-                    content={comment.bodySnippet.slice(0, 60)}
-                    style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
-                  />
-                </box>
-              );
-            })}
-
-            <box style={{ marginTop: 2 }}>
-              {(() => {
-                const globalIndex = frontpageData.jobs.length + frontpageData.events.upcomingEvents.length + frontpageData.newestComments.length;
-                const isSelected = frontpageSection === 'right' && globalIndex === selectedSidebarIndex;
+              {/* Events */}
+              <text content={t("upcomingEvents")} style={{ fg: themeColors.navigation.normal, attributes: 1, marginBottom: 1 }} />
+              {visibleEvents.map((event, index) => {
+                const eventIndex = eventBaseIndex + index;
+                const isSelected = panel === 'sidebar' && eventIndex === sidebarIndex;
                 return (
                   <box
+                    key={event.link}
                     style={{
+                      marginBottom: 1,
+                      padding: 1,
                       border: true,
                       borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
-                      padding: 1,
                       backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
                     }}
                   >
                     <text
-                      content={t("viewAllJobs")}
-                      style={{ 
-                        fg: isSelected ? themeColors.navigation.background : themeColors.navigation.selectedText, 
-                        attributes: 1 
-                      }}
-                    />
-                    <text
-                      content={t("pressEnter")}
-                      style={{ 
-                        fg: isSelected ? themeColors.navigation.background : themeColors.navigation.selectedText, 
-                        marginTop: 0 
-                      }}
+                      content={event.name}
+                      style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
                     />
                   </box>
                 );
-              })()}
-            </box>
-          </scrollbox>
-        </box>
+              })}
+
+              {/* Comments */}
+              <text content={t("newestComments")} style={{ fg: themeColors.navigation.normal, attributes: 1, marginTop: 2, marginBottom: 1 }} />
+              {visibleComments.map((comment, index) => {
+                const commentIndex = commentBaseIndex + index;
+                const isSelected = panel === 'sidebar' && commentIndex === sidebarIndex;
+                return (
+                  <box
+                    key={comment.url}
+                    style={{
+                      marginBottom: 1,
+                      padding: 1,
+                      border: true,
+                      borderColor: isSelected ? themeColors.navigation.selectedText : themeColors.navigation.selected,
+                      backgroundColor: isSelected ? themeColors.navigation.selectedText : colors.surface.card,
+                    }}
+                  >
+                    <text
+                      content={comment.articleTitle || comment.user?.name || t("anonymousComment")}
+                      style={{ fg: isSelected ? themeColors.navigation.background : themeColors.navigation.normal }}
+                    />
+                  </box>
+                );
+              })}
+            </ScrollSurface>
+          </box>
+        )}
       </box>
     </box>
   );

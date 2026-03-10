@@ -35,6 +35,17 @@
 
 _Currently no major items in progress - all high priority MVP features completed!_
 
+### Recent Refactorings (2025-10-07)
+
+- [x] Refactored `src/index.tsx` into modular, page-specific handlers
+- [x] Created `src/hooks/useListNavigation.ts` - Generic scroll-to-selection hook
+- [x] Created `src/hooks/useKeyboardHandler.ts` - Generic keyboard event handler
+- [x] Created `src/pages/FrontpageNavigationHandler.tsx` - Frontpage-specific navigation logic
+- [x] Made scroll-by-navigating-items generic and reusable across all pages
+- [x] Improved code organization and separation of concerns
+- [x] Enhanced scroll behavior with intelligent visibility detection
+- [x] Applied scroll-to-selection to all frontpage components (left/middle/right)
+
 ### TypeScript Integration Issues (COMPLETED ✅)
 
 - [x] Fix OpenTUI JSX element recognition

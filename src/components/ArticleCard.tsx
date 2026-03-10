@@ -5,11 +5,8 @@ export interface ArticleCardData {
   subtitle?: string;
   author?: string;
   date?: string;
-  excerpt?: string;
   reactions?: number;
   comments?: number;
-  views?: number;
-  likes?: number;
   tags?: string[];
 }
 
@@ -19,35 +16,51 @@ export interface ArticleCardProps {
   prefix?: string;
   footnote?: string;
   meta?: string[];
-  variant?: 'default' | 'compact';
-  key?: string | number;
+  variant?: 'hero' | 'default' | 'compact';
 }
 
 export const ArticleCard = ({ data, selected, prefix, footnote, meta, variant }: ArticleCardProps) => {
   const theme = useTheme();
   const kind = variant ?? 'default';
+
   const bg = selected ? theme.navigation.selected : theme.colors.surface.card;
   const fg = selected ? theme.navigation.selectedText : theme.colors.text.primary;
   const borderColor = selected
-    ? theme.navigation.selectedText
-    : theme.colors.border.subtle;
+    ? theme.colors.accent.teal
+    : kind === 'hero'
+      ? theme.colors.accent.pink
+      : theme.colors.border.subtle;
   const subtitleColor = selected ? theme.navigation.selectedText : theme.article.subtitle;
-  const pad = kind === 'compact' ? 1 : 2;
-  const gap = kind === 'compact' ? 0 : 1;
-  const authorDate = [data.author, data.date].filter(Boolean).join(' • ');
-  const showAuthorDate = Boolean(authorDate) && kind === 'default';
-  const tagLine = data.tags?.length ? data.tags.join(', ') : '';
+
+  if (kind === 'compact') {
+    const authorDate = [data.author, data.date].filter(Boolean).join(' · ');
+    return (
+      <box
+        style={{
+          flexDirection: 'row',
+          border: true,
+          borderColor,
+          padding: 1,
+          marginBottom: 0,
+          backgroundColor: bg,
+        }}
+      >
+        {prefix ? <text content={`${prefix} `} style={{ fg: theme.colors.text.secondary }} /> : null}
+        <text content={data.title} style={{ fg, attributes: 1 }} />
+        {authorDate ? <text content={`  ${authorDate}`} style={{ fg: theme.colors.text.secondary }} /> : null}
+      </box>
+    );
+  }
+
+  const authorDate = [data.author, data.date].filter(Boolean).join(' · ');
+  const tags = data.tags?.length ? data.tags.join(', ') : '';
   const stats = [
     data.reactions !== undefined ? `❤️ ${data.reactions}` : null,
     data.comments !== undefined ? `💬 ${data.comments}` : null,
-    data.views !== undefined ? `👀 ${data.views}` : null,
-    data.likes !== undefined ? `👍 ${data.likes}` : null,
   ].filter(Boolean) as string[];
   const metas = meta?.filter(Boolean) ?? [];
-  const showStats = stats.length > 0 && kind === 'default';
-  const showExcerpt = Boolean(data.excerpt) && kind === 'default';
-  const showTags = Boolean(tagLine) && kind === 'default';
-  const hasMeta = metas.length > 0;
+  const isHero = kind === 'hero';
+  const pad = isHero ? 2 : 2;
 
   return (
     <box
@@ -61,34 +74,33 @@ export const ArticleCard = ({ data, selected, prefix, footnote, meta, variant }:
       }}
     >
       <box style={{ flexDirection: 'row' }}>
-        {prefix ? (
-          <text content={`${prefix} `} style={{ fg: theme.colors.text.secondary }} />
-        ) : null}
+        {isHero ? <text content="★ " style={{ fg: theme.colors.accent.pink }} /> : null}
+        {prefix ? <text content={`${prefix} `} style={{ fg: theme.colors.text.secondary }} /> : null}
         <text content={data.title} style={{ fg, attributes: 1 }} />
       </box>
 
       {data.subtitle ? (
-        <text content={data.subtitle} style={{ fg: subtitleColor, marginTop: gap }} />
+        <text content={data.subtitle} style={{ fg: subtitleColor, marginTop: 1 }} />
       ) : null}
 
-      {showAuthorDate ? (
-        <text content={authorDate} style={{ fg: theme.colors.text.secondary, marginTop: gap }} />
+      {authorDate ? (
+        <text content={authorDate} style={{ fg: theme.colors.text.secondary, marginTop: 1 }} />
       ) : null}
 
-      {hasMeta ? (
-        <box style={{ flexDirection: 'column', marginTop: gap }}>
+      {metas.length > 0 ? (
+        <box style={{ flexDirection: 'column', marginTop: 1 }}>
           {metas.map((item, index) => (
             <text key={`${item}-${index}`} content={item} style={{ fg: theme.colors.text.secondary }} />
           ))}
         </box>
       ) : null}
 
-      {showExcerpt ? (
-        <text content={data.excerpt ?? ''} style={{ fg: theme.colors.text.accent, marginTop: gap }} />
+      {tags ? (
+        <text content={`🏷️ ${tags}`} style={{ fg: theme.tag.name, marginTop: 1 }} />
       ) : null}
 
-      {showStats ? (
-        <box style={{ flexDirection: 'row', marginTop: gap }}>
+      {stats.length > 0 ? (
+        <box style={{ flexDirection: 'row', marginTop: 1 }}>
           {stats.map((stat, index) => (
             <text
               key={`${stat}-${index}`}
@@ -99,12 +111,8 @@ export const ArticleCard = ({ data, selected, prefix, footnote, meta, variant }:
         </box>
       ) : null}
 
-      {showTags ? (
-        <text content={`🏷️ ${tagLine}`} style={{ fg: theme.tag.name, marginTop: gap }} />
-      ) : null}
-
       {footnote ? (
-        <text content={footnote} style={{ fg: theme.colors.text.accent, marginTop: gap }} />
+        <text content={footnote} style={{ fg: theme.colors.text.accent, marginTop: 1 }} />
       ) : null}
     </box>
   );

@@ -3,6 +3,7 @@ import * as z from "zod";
 
 export const SectionSchema = z.enum([
     "artikkel",
+    "",
 ]);
 export type Section = z.infer<typeof SectionSchema>;
 
@@ -27,7 +28,7 @@ export const CompanyPartnerCompanySchema = z.object({
 export type CompanyPartnerCompany = z.infer<typeof CompanyPartnerCompanySchema>;
 
 export const BylineClassSchema = z.object({
-    "imageUrl": z.string(),
+    "imageUrl": z.string().optional(),
     "name": z.string(),
 });
 export type BylineClass = z.infer<typeof BylineClassSchema>;
@@ -232,6 +233,7 @@ export const ArticleSchema = z.object({
     "byline": BylineClassSchema,
     "reactions": ReactionsSchema,
     "highestRatedComment": HighestRatedCommentSchema.optional(),
+    "width": z.union([z.number(), z.null()]).optional(),
 });
 export type Article = z.infer<typeof ArticleSchema>;
 
@@ -247,13 +249,29 @@ export const FrontpageElementSchema = z.object({
 });
 export type FrontpageElement = z.infer<typeof FrontpageElementSchema>;
 
+// Schema for the OLD API (docs.kode24.no/api/frontpage) - no longer has frontpage sections
+export const OldFrontpageApiSchema = z.object({
+    "latestArticles": z.array(ArticleSchema),
+    "listing": ListingSchema,
+    "content": z.array(ContentSchema),
+    "events": EventsSchema,
+    "newestComments": z.array(NewestCommentSchema),
+    "companyPartners": z.array(CompanyPartnerSchema),
+    "contentTiles": z.array(BannerAdSchema),
+    "jobs": z.array(JobSchema),
+    "jobAdsSanity": z.array(JobAdsSanitySchema),
+    "partnerAdsSanity": z.array(PartnerAdsSanitySchema),
+    "bannerAds": z.array(BannerAdSchema),
+});
+export type OldFrontpageApi = z.infer<typeof OldFrontpageApiSchema>;
+
+// Combined Frontpage type used by the app (merges old + new API data)
 export const FrontpageSchema = z.object({
     "latestArticles": z.array(ArticleSchema),
     "frontpage": z.array(FrontpageElementSchema),
     "listing": ListingSchema,
     "content": z.array(ContentSchema),
     "events": EventsSchema,
-    "partners": z.array(PartnerSchema),
     "newestComments": z.array(NewestCommentSchema),
     "companyPartners": z.array(CompanyPartnerSchema),
     "contentTiles": z.array(BannerAdSchema),
