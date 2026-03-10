@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useKeyboard } from '@opentui/react';
 import type { Job, KeyEvent } from '../types/index.js';
 import { t } from '../i18n/index.js';
@@ -27,6 +27,9 @@ export const ListingsPage = ({ initialJobs = [] }: ListingsPageProps) => {
       setSelectedJob(selectedJob - 1);
     } else if (key.name === 'down' && selectedJob < jobs.length - 1) {
       setSelectedJob(selectedJob + 1);
+    } else if (key.name === 'return' && jobs[selectedJob]) {
+      const url = `https://kodejobb.no${jobs[selectedJob].published_url}`;
+      Bun.spawn(['open', url]);
     }
   });
 
