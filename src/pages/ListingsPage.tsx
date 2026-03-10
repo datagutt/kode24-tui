@@ -47,20 +47,16 @@ export const ListingsPage = ({ initialJobs = [] }: ListingsPageProps) => {
         width="100%"
       >
         {jobs.length === 0 ? (
-          <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-            <text content={t('noJobsFound')} style={{ fg: 'yellow' }} />
-          </box>
+          <text content={t('noJobsFound')} style={{ fg: 'yellow' }} />
         ) : (
-          <box style={{ flexDirection: "column" }}>
-            {jobs.map((job, index) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                selected={index === selectedJob}
-                footnote={index === selectedJob ? t('pressEnter') : undefined}
-              />
-            ))}
-          </box>
+          jobs.map((job, index) => (
+            <JobCard
+              key={job.id}
+              job={job}
+              selected={index === selectedJob}
+              footnote={index === selectedJob ? t('pressEnter') : undefined}
+            />
+          ))
         )}
       </ScrollSurface>
     </box>

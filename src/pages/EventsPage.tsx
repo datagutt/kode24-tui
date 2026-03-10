@@ -45,20 +45,16 @@ export const EventsPage = ({ events }: EventsPageProps) => {
         width="100%"
       >
         {events.length === 0 ? (
-          <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-            <text content={t('noEventsFound')} style={{ fg: 'yellow' }} />
-          </box>
+          <text content={t('noEventsFound')} style={{ fg: 'yellow' }} />
         ) : (
-          <box style={{ flexDirection: "column" }}>
-            {events.map((event, index) => (
-              <EventCard
-                key={event.link}
-                event={event}
-                selected={index === selected}
-                footnote={index === selected ? t('pressEnter') : undefined}
-              />
-            ))}
-          </box>
+          events.map((event, index) => (
+            <EventCard
+              key={event.link}
+              event={event}
+              selected={index === selected}
+              footnote={index === selected ? t('pressEnter') : undefined}
+            />
+          ))
         )}
       </ScrollSurface>
     </box>
