@@ -44,7 +44,6 @@ const NewFrontpageSchema = z.object({
 
 // Transform a lab Result to an Article format
 function transformResultToArticle(result: z.infer<typeof ResultSchema>): Article {
-  // Extract article ID from URL (last segment)
   const urlId = result.url.split("/").pop() ?? String(result.id);
   return {
     id: urlId,
@@ -66,6 +65,7 @@ function transformResultToArticle(result: z.infer<typeof ResultSchema>): Article
       comments_count: 0,
       reactions_count: 0,
     },
+    width: result.width ?? result.metadata.width.desktop ?? null,
   };
 }
 

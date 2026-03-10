@@ -6,8 +6,8 @@
       "name": "kode24-tui",
       "dependencies": {
         "@better-fetch/fetch": "^1.1.18",
-        "@opentui/core": "0.1.69",
-        "@opentui/react": "0.1.69",
+        "@opentui/core": "^0.1.69",
+        "@opentui/react": "^0.1.69",
         "cheerio": "^1.1.2",
         "html-entities": "^2.6.0",
         "react": "^19.2.0",

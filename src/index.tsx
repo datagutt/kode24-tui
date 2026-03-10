@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { createRoot } from '@opentui/react';
+import { createRoot, useKeyboard } from '@opentui/react';
 import { createCliRenderer } from '@opentui/core';
 import { api } from './services/api.js';
 import { useNavigation } from './hooks/useNavigation.js';
-import { useKeyboardHandler } from './hooks/useKeyboardHandler.js';
-import { createFrontpageNavigationHandler } from './pages/FrontpageNavigationHandler.js';
 import { Layout } from './components/Layout.js';
 import { HelpOverlay } from './components/HelpOverlay.js';
 import { TagsOverlay } from './components/TagsOverlay.js';
@@ -23,38 +21,23 @@ export const App = () => {
   const [showHelp, setShowHelp] = useState(false);
   const [showTags, setShowTags] = useState(false);
   const [currentArticleId, setCurrentArticleId] = useState<string | null>(null);
-  const { navigation, navigateToPage, goBack, updateSelection } = useNavigation();
+  const { navigation, navigateToPage, goBack } = useNavigation();
 
   const filterFrontpageByTag = (tagName: string) => {
     if (!frontpageData) return;
-
-    const filterArticlesByTag = (articles: Article[]) => {
-      return articles.filter(article => {
-        const tags = article.tags ? article.tags.split(',').map((tag: string) => tag.trim().toLowerCase()) : [];
-        return tags.includes(tagName.toLowerCase());
-      });
-    };
-
-    const filterSectionsByTag = (sections: Frontpage["frontpage"]) => {
-      return sections.map(section => ({
-        ...section,
-        articles: filterArticlesByTag(section.articles)
-      })).filter(section => section.articles.length > 0);
-    };
-
     const filtered: Frontpage = {
       ...frontpageData,
-      latestArticles: filterArticlesByTag(frontpageData.latestArticles),
-      frontpage: filterSectionsByTag(frontpageData.frontpage)
+      latestArticles: frontpageData.latestArticles.filter(article => {
+        const tags = article.tags ? article.tags.split(',').map(tag => tag.trim().toLowerCase()) : [];
+        return tags.includes(tagName.toLowerCase());
+      }),
     };
-
     setFilteredFrontpageData(filtered);
   };
 
   const clearFilter = () => {
     setSelectedTagFilter(null);
     setFilteredFrontpageData(null);
-    updateSelection(0, 0, 'middle');
   };
 
   const navigateToArticle = (articleId: string) => {
@@ -62,7 +45,8 @@ export const App = () => {
     navigateToPage('article');
   };
 
-  useKeyboardHandler((key: KeyEvent) => {
+  // Global keyboard handler - only global keys here
+  useKeyboard((key: KeyEvent) => {
     if (key.name === 'q') {
       process.exit(0);
     }
@@ -70,6 +54,8 @@ export const App = () => {
     if (key.name === 'escape') {
       if (showHelp) {
         setShowHelp(false);
+      } else if (showTags) {
+        setShowTags(false);
       } else if (selectedTagFilter && navigation.currentPage === 'frontpage') {
         clearFilter();
       } else {
@@ -81,21 +67,6 @@ export const App = () => {
     if (key.name === 'h') {
       setShowHelp(!showHelp);
       return;
-    }
-
-    if (navigation.currentPage === 'frontpage' && frontpageData && !showTags) {
-      const handler = createFrontpageNavigationHandler({
-        navigation,
-        frontpageData,
-        filteredFrontpageData,
-        selectedTagFilter,
-        updateSelection,
-        onNavigateToArticle: navigateToArticle,
-        onNavigateToPage: navigateToPage,
-        onToggleTags: () => setShowTags(true),
-        onClearFilter: clearFilter,
-      });
-      handler(key);
     }
   });
 
@@ -111,7 +82,6 @@ export const App = () => {
         setLoading(false);
       }
     }
-
     fetchFrontpage();
   }, []);
 
@@ -138,73 +108,56 @@ export const App = () => {
     );
   }
 
-  if (error) {
+  if (error || !frontpageData) {
     return (
       <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
         <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
-          <text content={`Error: ${error}`} style={{ fg: 'red' }} />
+          <text content={error ? `Error: ${error}` : t('noDataAvailable')} style={{ fg: 'red' }} />
           <text content={t('pressQToQuit')} style={{ fg: 'gray' }} marginTop={1} />
         </box>
       </Layout>
     );
   }
 
-  if (!frontpageData) {
-    return (
-      <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
-        <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
-          <text content={t('noDataAvailable')} style={{ fg: 'yellow' }} />
-        </box>
-      </Layout>
-    );
-  }
+  const handleTagSelect = (tagName: string) => {
+    setSelectedTagFilter(tagName);
+    filterFrontpageByTag(tagName);
+  };
+
+  const activeData = filteredFrontpageData || frontpageData;
+  const overlaysOpen = showHelp || showTags;
 
   const renderCurrentPage = () => {
     switch (navigation.currentPage) {
-      case 'frontpage': {
-        const activeData = filteredFrontpageData || frontpageData;
-        const maxArticleIndex = Math.max(0, activeData.latestArticles.length - 1);
-        const safeSelectedArticle = Math.min(navigation.selectedIndex, maxArticleIndex);
-        
+      case 'frontpage':
         return (
           <FrontpagePage
             frontpageData={activeData}
-            selectedSection={navigation.selectedSection}
-            selectedArticle={navigation.frontpageSection === 'middle' ? safeSelectedArticle : 0}
-            frontpageSection={navigation.frontpageSection || 'middle'}
-            selectedSidebarIndex={navigation.frontpageSection === 'right' ? navigation.selectedIndex : 0}
             selectedTagFilter={selectedTagFilter}
             onNavigateToArticle={navigateToArticle}
             onNavigateToListings={() => navigateToPage('listings')}
+            onNavigateToEvents={() => navigateToPage('events')}
+            onToggleTags={() => setShowTags(true)}
+            onClearFilter={clearFilter}
+            isActive={!overlaysOpen}
           />
         );
-      }
-      
+
       case 'article':
         return currentArticleId ? (
-          <ArticlePage
-            articleId={currentArticleId}
-            onBack={goBack}
-          />
+          <ArticlePage articleId={currentArticleId} onBack={goBack} />
         ) : (
           <box style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", width: "100%" }}>
             <text content={t('noArticleSelected')} style={{ fg: 'yellow' }} />
             <text content={t('pressEscToGoBack')} style={{ fg: 'gray', marginTop: 1 }} />
           </box>
         );
-      
+
       case 'listings':
         return (
-          <ListingsPage
-            initialJobs={frontpageData.jobs}
-            selectedJob={navigation.selectedIndex}
-            onJobSelect={(jobId: string) => {
-              // Could navigate to job details page in future
-              console.log('Selected job:', jobId);
-            }}
-          />
+          <ListingsPage initialJobs={frontpageData.jobs} />
         );
-      
+
       case 'events':
         return (
           <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
@@ -212,7 +165,7 @@ export const App = () => {
             <text content={t('pressEscToGoBack')} style={{ fg: 'gray' }} marginTop={1} />
           </box>
         );
-      
+
       default:
         return (
           <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
@@ -222,18 +175,12 @@ export const App = () => {
     }
   };
 
-  const handleTagSelect = (tagName: string) => {
-    setSelectedTagFilter(tagName);
-    filterFrontpageByTag(tagName);
-    updateSelection(0, 0, 'middle');
-  };
-
   return (
     <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
       {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
       {showTags && (
-        <TagsOverlay 
-          onClose={() => setShowTags(false)} 
+        <TagsOverlay
+          onClose={() => setShowTags(false)}
           onSelectTag={handleTagSelect}
           selectedTagFilter={selectedTagFilter}
         />

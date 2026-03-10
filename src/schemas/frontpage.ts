@@ -233,6 +233,7 @@ export const ArticleSchema = z.object({
     "byline": BylineClassSchema,
     "reactions": ReactionsSchema,
     "highestRatedComment": HighestRatedCommentSchema.optional(),
+    "width": z.union([z.number(), z.null()]).optional(),
 });
 export type Article = z.infer<typeof ArticleSchema>;
 

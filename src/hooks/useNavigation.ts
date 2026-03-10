@@ -4,25 +4,18 @@ import type { Page, NavigationState } from '../types/index.js';
 export const useNavigation = (initialPage: Page = 'frontpage') => {
   const [history, setHistory] = useState<NavigationState[]>([{
     currentPage: initialPage,
-    selectedIndex: 0,
-    selectedSection: 0,
-    frontpageSection: 'middle',
     breadcrumb: [initialPage],
   }]);
 
   const navigation = history[history.length - 1];
 
-  const navigateToPage = useCallback((page: Page, resetSelection = true) => {
+  const navigateToPage = useCallback((page: Page) => {
     setHistory(prev => {
       const current = prev[prev.length - 1];
-      const newState = {
+      return [...prev, {
         currentPage: page,
-        selectedIndex: resetSelection ? 0 : current.selectedIndex,
-        selectedSection: resetSelection ? 0 : current.selectedSection,
-        frontpageSection: resetSelection ? 'middle' : current.frontpageSection,
         breadcrumb: [...current.breadcrumb, page],
-      };
-      return [...prev, newState];
+      }];
     });
   }, []);
 
@@ -33,34 +26,5 @@ export const useNavigation = (initialPage: Page = 'frontpage') => {
     });
   }, []);
 
-  const updateSelection = useCallback((selectedIndex: number, selectedSection?: number, frontpageSection?: 'middle' | 'right') => {
-    setHistory(prev => {
-      const current = prev[prev.length - 1];
-      const newState = {
-        ...current,
-        selectedIndex,
-        selectedSection: selectedSection ?? current.selectedSection,
-        frontpageSection: frontpageSection ?? current.frontpageSection,
-      };
-      return [...prev.slice(0, -1), newState];
-    });
-  }, []);
-
-  const resetNavigation = useCallback(() => {
-    setHistory([{
-      currentPage: 'frontpage',
-      selectedIndex: 0,
-      selectedSection: 0,
-      frontpageSection: 'middle',
-      breadcrumb: ['frontpage'],
-    }]);
-  }, []);
-
-  return {
-    navigation,
-    navigateToPage,
-    goBack,
-    updateSelection,
-    resetNavigation,
-  };
+  return { navigation, navigateToPage, goBack };
 };

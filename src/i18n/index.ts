@@ -79,13 +79,16 @@ export const translations: Record<string, string> = {
   developmentInfo: "🔧 Utviklingsinfo:",
   headerTitle: "kode24.no",
   footerHelp:
-    "q=Avslutt | Esc=Tilbake | ↑↓←→=Naviger | Enter=Velg | Tab=Bytt seksjon | t=Tags | l=Jobber | c=Fjern filter",
+    "q=Avslutt | ↑↓=Naviger | Tab=Bytt panel | Enter=Velg | t=Tags | l=Jobber | h=Hjelp",
+  newestComments: "💬 Nylige kommentarer",
+  anonymousComment: "Anonym kommentar",
+  jobsEvents: "💼 Jobber & arrangementer",
 
   // Help
   keyboardShortcuts: "Tastatursnarveier",
   navigation: "Navigasjon:",
   navUpDown: "  ↑/↓ - Naviger opp/ned",
-  navLeftRight: "  ←/→ - Naviger venstre/høyre (seksjoner)",
+  navLeftRight: "  Tab - Bytt mellom hovedpanel og sidebar",
   navEnter: "  Enter - Velg element",
   navEsc: "  Esc - Gå tilbake",
   pages: "Sider:",

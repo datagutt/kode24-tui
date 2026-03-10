@@ -1,4 +1,3 @@
-import React from 'react';
 import { t } from '../i18n/index.js';
 
 interface HelpOverlayProps {
@@ -22,7 +21,7 @@ export const HelpOverlay = ({ onClose }: HelpOverlayProps) => {
       <box flexDirection="column" gap={1}>
         <text content={t('navigation')} style={{ fg: 'yellow' }} />
         <text content={t('navUpDown')} />
-        <text content={t('navLeftRight')} />
+        <text content="  Tab - Bytt mellom hovedpanel og sidebar" />
         <text content={t('navEnter')} />
         <text content={t('navEsc')} />
 
@@ -34,6 +33,7 @@ export const HelpOverlay = ({ onClose }: HelpOverlayProps) => {
 
         <text content="" />
         <text content={t('general')} style={{ fg: 'yellow' }} />
+        <text content="  c - Fjern tag-filter (når aktivt)" />
         <text content={t('helpToggle')} />
         <text content={t('quit')} />
       </box>

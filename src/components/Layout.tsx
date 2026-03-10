@@ -11,17 +11,19 @@ interface LayoutProps {
 
 const pageLabel = (page: Page): string => {
   switch (page) {
-    case "frontpage":
-      return "🏠 Frontpage";
-    case "article":
-      return "📰 Article";
-    case "listings":
-      return "💼 Listings";
-    case "events":
-      return "📅 Events";
-    default:
-      return "📱 kode24";
+    case "frontpage": return "🏠 Forside";
+    case "article": return "📰 Artikkel";
+    case "listings": return "💼 Jobber";
+    case "events": return "📅 Arrangementer";
+    default: return "📱 kode24";
   }
+};
+
+const footerHints: Record<Page, string> = {
+  frontpage: "q=Avslutt | ↑↓=Naviger | Tab=Bytt panel | Enter=Velg | t=Tags | l=Jobber | h=Hjelp",
+  article: "q=Avslutt | ↑↓/PgUp/PgDn=Rull | Esc=Tilbake | h=Hjelp",
+  listings: "q=Avslutt | ↑↓=Naviger | Esc=Tilbake | h=Hjelp",
+  events: "q=Avslutt | Esc=Tilbake | h=Hjelp",
 };
 
 export const Layout = ({ children, currentPage, breadcrumb }: LayoutProps) => {
@@ -40,6 +42,7 @@ export const Layout = ({ children, currentPage, breadcrumb }: LayoutProps) => {
         backgroundColor: theme.colors.background.base,
       }}
     >
+      {/* Header */}
       <box
         style={{
           height: 3,
@@ -53,11 +56,12 @@ export const Layout = ({ children, currentPage, breadcrumb }: LayoutProps) => {
           justifyContent: "space-between",
         }}
       >
-        <text content={t("headerTitle")} style={{ fg: theme.colors.text.primary, attributes: 1 }} />
+        <text content={t("headerTitle")} style={{ fg: theme.colors.accent.teal, attributes: 1 }} />
         <text content={trail} style={{ fg: theme.colors.text.secondary }} />
         <text content={now} style={{ fg: theme.colors.text.accent }} />
       </box>
 
+      {/* Main content */}
       <box
         style={{
           flexGrow: 1,
@@ -69,6 +73,7 @@ export const Layout = ({ children, currentPage, breadcrumb }: LayoutProps) => {
         {children}
       </box>
 
+      {/* Footer - context-sensitive */}
       <box
         style={{
           height: 2,
@@ -81,7 +86,7 @@ export const Layout = ({ children, currentPage, breadcrumb }: LayoutProps) => {
           padding: 1,
         }}
       >
-        <text content={t("footerHelp")} style={{ fg: theme.colors.text.secondary }} />
+        <text content={footerHints[currentPage]} style={{ fg: theme.colors.text.secondary }} />
       </box>
     </box>
   );

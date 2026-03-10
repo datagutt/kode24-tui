@@ -18,7 +18,6 @@ export const TagsOverlay = ({ onClose, onSelectTag, selectedTagFilter }: TagsOve
   const scrollRef = useListNavigation({
     selectedIndex,
     isActive: true,
-    useDynamicMetrics: true,
     buffer: 2,
   });
 
@@ -60,19 +59,19 @@ export const TagsOverlay = ({ onClose, onSelectTag, selectedTagFilter }: TagsOve
       padding={2}
     >
       <box flexDirection="row" justifyContent="space-between" marginBottom={1}>
-        <text 
-          content={t('categoriesTags')} 
-          style={{ fg: themeColors.tag.name, attributes: 1 }} 
+        <text
+          content={t('categoriesTags')}
+          style={{ fg: themeColors.tag.name, attributes: 1 }}
         />
-        <text 
-          content={selectedTagFilter ? `Current: #${selectedTagFilter}` : ''} 
-          style={{ fg: themeColors.tag.selected }} 
+        <text
+          content={selectedTagFilter ? `Aktiv: #${selectedTagFilter}` : ''}
+          style={{ fg: themeColors.tag.selected }}
         />
       </box>
 
-      <text 
-        content="Select a tag to filter articles. Press Enter to select, Esc or t to close." 
-        style={{ fg: colors.text.muted }} 
+      <text
+        content="Velg en tag for å filtrere artikler. Enter = velg, Esc/t = lukk."
+        style={{ fg: colors.text.muted }}
         marginBottom={1}
       />
 
@@ -97,9 +96,9 @@ export const TagsOverlay = ({ onClose, onSelectTag, selectedTagFilter }: TagsOve
               }}
             >
               <text
-                content={`${isActiveFilter ? 'Active: ' : ''}#${tag.name}`}
-                style={{ 
-                  fg: isSelected ? themeColors.navigation.background : themeColors.tag.name, 
+                content={`${isActiveFilter ? '✓ ' : ''}#${tag.name}`}
+                style={{
+                  fg: isSelected ? themeColors.navigation.background : themeColors.tag.name,
                   attributes: isActiveFilter ? 1 : 0
                 }}
               />
@@ -109,9 +108,9 @@ export const TagsOverlay = ({ onClose, onSelectTag, selectedTagFilter }: TagsOve
       </ScrollSurface>
 
       <box marginTop={1}>
-        <text 
-          content="Up/Down to navigate | Enter to select | Esc/t to close" 
-          style={{ fg: colors.text.muted }} 
+        <text
+          content="↑↓ = naviger | Enter = velg | Esc/t = lukk"
+          style={{ fg: colors.text.muted }}
         />
       </box>
     </box>
