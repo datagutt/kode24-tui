@@ -1,0 +1,23 @@
+src/pages/FrontpagePage.tsx
+  d83a38a0db42abec 63,65,69-72,76-85,90-94,121-125,127,278,292-298,306,317
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.10",
+  "base_commit_sha": "ae69b42e09efd4c1c135cbc9cb8ee637c252f4fb",
+  "prompts": {
+    "d83a38a0db42abec": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1e8aae60-0e97-4cf5-bebf-00ed3e4b90d8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Thomas Lekanger <thomas.lekanger@hotmail.com>",
+      "messages": [],
+      "total_additions": 77,
+      "total_deletions": 58,
+      "accepted_lines": 39,
+      "overriden_lines": 0
+    }
+  }
+}
