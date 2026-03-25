@@ -7,11 +7,11 @@ import {
   TagArticlesResponseSchema,
   ResultSchema,
 } from "../schemas/lab.js";
+import type { Result } from "../schemas/lab.js";
 import type {
   Frontpage,
   Lab,
   SearchResults,
-  TagArticlesResponse,
   Article,
 } from "../types/index.js";
 
@@ -151,7 +151,7 @@ export const api = {
     return data!;
   },
 
-  async fetchTagArticles(tag: string): Promise<SearchResults> {
+  async fetchTagArticles(tag: string): Promise<Result[]> {
     const { data, error } = await $fetch(
       `${LABRADOR_BASE}/tag/${tag}?lab_viewport=json`,
       {

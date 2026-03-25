@@ -61,16 +61,6 @@ export const ReactionsSchema = z.object({
 });
 export type Reactions = z.infer<typeof ReactionsSchema>;
 
-export const JobAdsSanityCompanySchema = z.object({
-    "name": z.string(),
-    "logo": z.string(),
-    "logoBackgroundLight": z.union([z.null(), z.string()]),
-    "logoBackgroundDark": z.union([z.null(), z.string()]),
-    "logoReal": z.union([z.null(), z.string()]),
-    "logoRealDark": z.union([z.null(), z.string()]),
-});
-export type JobAdsSanityCompany = z.infer<typeof JobAdsSanityCompanySchema>;
-
 export const JobCompanySchema = z.object({
     "imageUrl": z.string(),
     "logoReal": z.union([z.null(), z.string()]),
@@ -104,22 +94,6 @@ export const NewestCommentUserSchema = z.object({
     "badge_ids": z.array(z.number()).optional(),
 });
 export type NewestCommentUser = z.infer<typeof NewestCommentUserSchema>;
-
-export const AdSchema = z.object({
-    "title": z.string(),
-    "hideFrom": z.string(),
-    "uniqueValue": z.string(),
-    "banner": z.string(),
-    "companyId": z.string(),
-});
-export type Ad = z.infer<typeof AdSchema>;
-
-export const PartnerAdsSanityCompanySchema = z.object({
-    "logo": z.string(),
-    "title": z.string(),
-    "_id": z.string(),
-});
-export type PartnerAdsSanityCompany = z.infer<typeof PartnerAdsSanityCompanySchema>;
 
 export const PartnerSchema = z.object({
     "name": z.string(),
@@ -178,16 +152,6 @@ export const HighestRatedCommentSchema = z.object({
 });
 export type HighestRatedComment = z.infer<typeof HighestRatedCommentSchema>;
 
-export const JobAdsSanitySchema = z.object({
-    "applicationTitle": z.string(),
-    "title": z.string(),
-    "hideFrom": z.string(),
-    "adlink": z.string(),
-    "banner": z.string(),
-    "company": JobAdsSanityCompanySchema,
-});
-export type JobAdsSanity = z.infer<typeof JobAdsSanitySchema>;
-
 export const JobSchema = z.object({
     "id": z.string(),
     "published_url": z.string(),
@@ -212,24 +176,17 @@ export const NewestCommentSchema = z.object({
 });
 export type NewestComment = z.infer<typeof NewestCommentSchema>;
 
-export const PartnerAdsSanitySchema = z.object({
-    "company": PartnerAdsSanityCompanySchema,
-    "slug": z.string(),
-    "ads": z.array(AdSchema),
-});
-export type PartnerAdsSanity = z.infer<typeof PartnerAdsSanitySchema>;
-
 export const ArticleSchema = z.object({
     "id": z.string(),
     "title": z.string(),
     "published": z.coerce.date(),
     "section": SectionSchema,
-    "image": z.string(),
+    "image": z.string().optional(),
     "published_url": z.string(),
     "tags": z.string(),
     "subtitle": z.string(),
     "oldId": z.string(),
-    "frontCropUrl": z.string(),
+    "frontCropUrl": z.string().optional(),
     "byline": BylineClassSchema,
     "reactions": ReactionsSchema,
     "highestRatedComment": HighestRatedCommentSchema.optional(),
@@ -259,9 +216,6 @@ export const OldFrontpageApiSchema = z.object({
     "companyPartners": z.array(CompanyPartnerSchema),
     "contentTiles": z.array(BannerAdSchema),
     "jobs": z.array(JobSchema),
-    "jobAdsSanity": z.array(JobAdsSanitySchema),
-    "partnerAdsSanity": z.array(PartnerAdsSanitySchema),
-    "bannerAds": z.array(BannerAdSchema),
 });
 export type OldFrontpageApi = z.infer<typeof OldFrontpageApiSchema>;
 
@@ -276,8 +230,5 @@ export const FrontpageSchema = z.object({
     "companyPartners": z.array(CompanyPartnerSchema),
     "contentTiles": z.array(BannerAdSchema),
     "jobs": z.array(JobSchema),
-    "jobAdsSanity": z.array(JobAdsSanitySchema),
-    "partnerAdsSanity": z.array(PartnerAdsSanitySchema),
-    "bannerAds": z.array(BannerAdSchema),
 });
 export type Frontpage = z.infer<typeof FrontpageSchema>;

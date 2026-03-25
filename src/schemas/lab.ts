@@ -70,7 +70,7 @@ export type PrimaryTags = z.infer<typeof PrimaryTagsSchema>;
 export const FullBylineSchema = z.object({
   firstname: z.string(),
   lastname: z.string(),
-  imageUrl: z.string(),
+  imageUrl: z.string().optional(),
   description: z.string().optional(),
 });
 export type FullByline = z.infer<typeof FullBylineSchema>;
@@ -126,9 +126,25 @@ export const PanoSchema = z.object({
 });
 export type Pano = z.infer<typeof PanoSchema>;
 
+// Viewport-aware field: can be a direct value, a per-viewport object, or null
+const viewportBoolean = z.union([
+  z.boolean(),
+  z.object({ desktop: z.boolean(), mobile: z.boolean().optional() }),
+  z.null(),
+]);
+
+const viewportString = z.union([
+  z.object({ desktop: z.union([z.string(), z.null()]), mobile: z.string().optional() }),
+  z.null(),
+]);
+
 export const ResultMetadataSchema = z.object({
   hidesubtitle: HidesubtitleSchema,
   width: WidthSchema,
+  background_color: viewportString.optional(),
+  showKicker: viewportBoolean.optional(),
+  floatingKicker: viewportBoolean.optional(),
+  sub_hideSubtitle: z.boolean().optional(),
 });
 export type ResultMetadata = z.infer<typeof ResultMetadataSchema>;
 
@@ -180,6 +196,7 @@ export const ResultSchema = z.object({
   id: z.number(),
   section_tag: SectionSchema,
   full_bylines: z.array(FullBylineSchema),
+  kickerHTML: z.string().optional(),
 });
 export type Result = z.infer<typeof ResultSchema>;
 
@@ -233,6 +250,12 @@ export const PageFieldsSchema = z.object({
   automatic: z.string().optional(),
   amount: z.string().optional(),
   automatic_site_id: z.string().optional(),
+  someimage: z.string().optional(),
+  somedescription: z.string().optional(),
+  sometitle: z.string().optional(),
+  seotitle: z.string().optional(),
+  seodescription: z.string().optional(),
+  isInternalPaywall: z.string().optional(),
 });
 export type PageFields = z.infer<typeof PageFieldsSchema>;
 
@@ -266,8 +289,17 @@ export const LabSchema = z.object({
 });
 export type Lab = z.infer<typeof LabSchema>;
 
-// Search results schema (array of articles)
-export const SearchResultsSchema = z.array(ResultSchema);
+// Search result from docs.kode24.no/api/search — different shape from lab Result
+export const SearchResultSchema = z.object({
+  published_url: z.string(),
+  image: z.string().optional(),
+  title: z.string(),
+  published: z.coerce.date(),
+  full_bylines: z.array(FullBylineSchema),
+});
+export type SearchResult = z.infer<typeof SearchResultSchema>;
+
+export const SearchResultsSchema = z.array(SearchResultSchema);
 export type SearchResults = z.infer<typeof SearchResultsSchema>;
 
 // Tag articles response schema

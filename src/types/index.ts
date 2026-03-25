@@ -1,5 +1,5 @@
 export type { Frontpage, Article, Job, UpcomingEvent } from '../schemas/frontpage.js';
-export type { Lab, Page as LabPage, SearchResults, TagArticlesResponse } from '../schemas/lab.js';
+export type { Lab, Page as LabPage, Result, SearchResult, SearchResults, TagArticlesResponse } from '../schemas/lab.js';
 
 export type Page = 'frontpage' | 'article' | 'listings' | 'events';
 
