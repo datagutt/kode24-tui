@@ -1,0 +1,29 @@
+src/services/api.ts
+  daefc529e990ec20 10,154
+src/types/index.ts
+  daefc529e990ec20 2
+src/schemas/lab.ts
+  daefc529e990ec20 73,129-140,144-147,199,253-258,292-302
+src/schemas/frontpage.ts
+  daefc529e990ec20 184,189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "32d68f745cd6b9570e40672051cb1b3d778f3217",
+  "prompts": {
+    "daefc529e990ec20": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7d156df6-928c-4c1a-820d-358d15071663",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Thomas Lekanger <thomas.lekanger@hotmail.com>",
+      "messages": [],
+      "total_additions": 43,
+      "total_deletions": 60,
+      "accepted_lines": 40,
+      "overriden_lines": 0
+    }
+  }
+}
