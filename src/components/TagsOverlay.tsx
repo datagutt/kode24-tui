@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { colors, themeColors } from '../theme/colors.js';
 import { t } from '../i18n/index.js';
 import { popularTags } from '../pages/TagsPage.js';
-import ScrollSurface from './ScrollSurface.js';
-import { useListNavigation } from '../hooks/useListNavigation.js';
 import { useKeyboard } from '@opentui/react';
+import type { KeyEvent } from '../types/index.js';
+import type { SelectOption } from '@opentui/core';
 
 interface TagsOverlayProps {
   onClose: () => void;
@@ -13,37 +13,20 @@ interface TagsOverlayProps {
 }
 
 export const TagsOverlay = ({ onClose, onSelectTag, selectedTagFilter }: TagsOverlayProps) => {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const options = useMemo<SelectOption[]>(
+    () =>
+      popularTags.map(tag => ({
+        name: `${selectedTagFilter === tag.name ? '✓ ' : ''}#${tag.name}`,
+        description: '',
+        value: tag.name,
+      })),
+    [selectedTagFilter]
+  );
 
-  const scrollRef = useListNavigation({
-    selectedIndex,
-    isActive: true,
-    buffer: 2,
-  });
-
-  useKeyboard((key) => {
+  // Esc/t close the overlay; up/down/enter are owned by the focused <select>.
+  useKeyboard((key: KeyEvent) => {
     if (key.name === 'escape' || key.name === 't') {
       onClose();
-      return;
-    }
-
-    if (key.name === 'up' && selectedIndex > 0) {
-      setSelectedIndex(selectedIndex - 1);
-      return;
-    }
-
-    if (key.name === 'down' && selectedIndex < popularTags.length - 1) {
-      setSelectedIndex(selectedIndex + 1);
-      return;
-    }
-
-    if (key.name === 'return') {
-      const tag = popularTags[selectedIndex];
-      if (tag) {
-        onSelectTag(tag.name);
-        onClose();
-      }
-      return;
     }
   });
 
@@ -59,10 +42,7 @@ export const TagsOverlay = ({ onClose, onSelectTag, selectedTagFilter }: TagsOve
       padding={2}
     >
       <box flexDirection="row" justifyContent="space-between" marginBottom={1}>
-        <text
-          content={t('categoriesTags')}
-          style={{ fg: themeColors.tag.name, attributes: 1 }}
-        />
+        <text content={t('categoriesTags')} style={{ fg: themeColors.tag.name, attributes: 1 }} />
         <text
           content={selectedTagFilter ? `Aktiv: #${selectedTagFilter}` : ''}
           style={{ fg: themeColors.tag.selected }}
@@ -75,43 +55,27 @@ export const TagsOverlay = ({ onClose, onSelectTag, selectedTagFilter }: TagsOve
         marginBottom={1}
       />
 
-      <ScrollSurface
-        ref={scrollRef}
-        variant="sidebar"
-        focused={true}
-        width="100%"
-      >
-        {popularTags.map((tag, index) => {
-          const isSelected = index === selectedIndex;
-          const isActiveFilter = selectedTagFilter === tag.name;
-          return (
-            <box
-              key={tag.name}
-              style={{
-                marginBottom: 1,
-                padding: 1,
-                border: true,
-                borderColor: isSelected ? themeColors.navigation.selectedText : isActiveFilter ? themeColors.tag.background : themeColors.navigation.selected,
-                backgroundColor: isSelected ? themeColors.navigation.selectedText : isActiveFilter ? themeColors.tag.background : colors.surface.card,
-              }}
-            >
-              <text
-                content={`${isActiveFilter ? '✓ ' : ''}#${tag.name}`}
-                style={{
-                  fg: isSelected ? themeColors.navigation.background : themeColors.tag.name,
-                  attributes: isActiveFilter ? 1 : 0
-                }}
-              />
-            </box>
-          );
-        })}
-      </ScrollSurface>
+      <select
+        focused
+        options={options}
+        showDescription={false}
+        showScrollIndicator
+        wrapSelection
+        backgroundColor={colors.surface.card}
+        textColor={themeColors.tag.name}
+        focusedBackgroundColor={colors.surface.card}
+        selectedBackgroundColor={themeColors.navigation.selected}
+        selectedTextColor={themeColors.navigation.selectedText}
+        onSelect={(_index, option) => {
+          if (!option) return;
+          onSelectTag(option.value);
+          onClose();
+        }}
+        style={{ flexGrow: 1, width: '100%' }}
+      />
 
       <box marginTop={1}>
-        <text
-          content="↑↓ = naviger | Enter = velg | Esc/t = lukk"
-          style={{ fg: colors.text.muted }}
-        />
+        <text content="↑↓ = naviger | Enter = velg | Esc/t = lukk" style={{ fg: colors.text.muted }} />
       </box>
     </box>
   );

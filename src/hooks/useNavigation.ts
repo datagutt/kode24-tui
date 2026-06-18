@@ -26,5 +26,12 @@ export const useNavigation = (initialPage: Page = 'frontpage') => {
     });
   }, []);
 
-  return { navigation, navigateToPage, goBack };
+  // Top-level sections (the tab bar) are siblings, not a stack: switching one
+  // resets history so Esc from a detail view returns to that section, not a
+  // trail of previously visited tabs.
+  const navigateToSection = useCallback((page: Page) => {
+    setHistory([{ currentPage: page, breadcrumb: [page] }]);
+  }, []);
+
+  return { navigation, navigateToPage, navigateToSection, goBack };
 };

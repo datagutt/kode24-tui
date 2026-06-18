@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { api } from '../services/api.js';
 import { useTheme } from '../hooks/useTheme.js';
 import { useScrollboxFocus } from '../hooks/useScrollboxFocus.js';
-import { convertHTMLToOpenTUI } from '../utils/htmlToOpenTUI.js';
+import { htmlToMarkdown } from '../utils/htmlToMarkdown.js';
+import { markdownSyntaxStyle } from '../theme/markdownStyle.js';
 import type { Lab } from '../types/index.js';
 import { t } from '../i18n/index.js';
 import ScrollSurface from '../components/ScrollSurface.js';
@@ -18,6 +19,10 @@ export const ArticlePage = ({ articleId }: ArticlePageProps) => {
   const [error, setError] = useState<string | null>(null);
   const theme = useTheme();
   const scrollboxRef = useScrollboxFocus([article]);
+  const bodyMarkdown = useMemo(() => {
+    const html = article?.page?.fields?.bodytext;
+    return html ? htmlToMarkdown(html) : '';
+  }, [article]);
 
   useEffect(() => {
     async function fetchArticle() {
@@ -102,10 +107,8 @@ export const ArticlePage = ({ articleId }: ArticlePageProps) => {
         padding={2}
         width="100%"
       >
-        {fields?.bodytext ? (
-          <box style={{ flexDirection: "column" }}>
-            {convertHTMLToOpenTUI(fields.bodytext)}
-          </box>
+        {bodyMarkdown ? (
+          <markdown content={bodyMarkdown} syntaxStyle={markdownSyntaxStyle()} fg={theme.colors.text.secondary} />
         ) : (
           <box style={{ flexDirection: "column" }}>
             <text content={t('articleContentUnavailable')} style={{ fg: theme.status.warning, marginBottom: 1 }} />

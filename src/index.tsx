@@ -22,7 +22,7 @@ export const App = () => {
   const [showHelp, setShowHelp] = useState(false);
   const [showTags, setShowTags] = useState(false);
   const [currentArticleId, setCurrentArticleId] = useState<string | null>(null);
-  const { navigation, navigateToPage, goBack } = useNavigation();
+  const { navigation, navigateToPage, navigateToSection, goBack } = useNavigation();
 
   const filterFrontpageByTag = (tagName: string) => {
     if (!frontpageData) return;
@@ -101,7 +101,7 @@ export const App = () => {
 
   if (loading) {
     return (
-      <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
+      <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb} onSelectSection={navigateToSection} tabsFocused={false}>
         <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
           <text content={t('loadingFrontpage')} style={{ fg: 'blue' }} />
         </box>
@@ -111,7 +111,7 @@ export const App = () => {
 
   if (error || !frontpageData) {
     return (
-      <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
+      <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb} onSelectSection={navigateToSection} tabsFocused={false}>
         <box flexDirection="column" alignItems="center" justifyContent="center" height="100%" width="100%">
           <text content={error ? `Error: ${error}` : t('noDataAvailable')} style={{ fg: 'red' }} />
           <text content={t('pressQToQuit')} style={{ fg: 'gray' }} marginTop={1} />
@@ -136,8 +136,8 @@ export const App = () => {
             frontpageData={activeData}
             selectedTagFilter={selectedTagFilter}
             onNavigateToArticle={navigateToArticle}
-            onNavigateToListings={() => navigateToPage('listings')}
-            onNavigateToEvents={() => navigateToPage('events')}
+            onNavigateToListings={() => navigateToSection('listings')}
+            onNavigateToEvents={() => navigateToSection('events')}
             onToggleTags={() => setShowTags(true)}
             onClearFilter={clearFilter}
             isActive={!overlaysOpen}
@@ -174,7 +174,7 @@ export const App = () => {
   };
 
   return (
-    <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb}>
+    <Layout currentPage={navigation.currentPage} breadcrumb={navigation.breadcrumb} onSelectSection={navigateToSection} tabsFocused={!overlaysOpen}>
       {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
       {showTags && (
         <TagsOverlay
