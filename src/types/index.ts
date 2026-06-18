@@ -5,12 +5,7 @@ export type Page = 'frontpage' | 'article' | 'listings' | 'events';
 
 export type Panel = 'main' | 'sidebar';
 
-export interface KeyEvent {
-  name: string;
-  ctrl?: boolean;
-  meta?: boolean;
-  shift?: boolean;
-}
+export type { KeyEvent } from '@opentui/core';
 
 export interface NavigationState {
   currentPage: Page;
