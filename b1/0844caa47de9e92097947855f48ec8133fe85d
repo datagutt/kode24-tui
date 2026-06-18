@@ -1,0 +1,24 @@
+package.json
+  s_459531e39da425::t_7eb3c75e2550b8 23,27-28
+  s_459531e39da425::t_efd969e8c5311d 18-19
+src/types/index.ts
+  s_459531e39da425::t_bd3395ddae2552 8
+bun.lock
+  s_459531e39da425::t_59a003441bfee3 9-10,14,19,29,31,33,35,37,39,41,43,45,47,49,57,59,63,77,87-88,93,101,115,119,123,125,127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "b10844caa47de9e92097947855f48ec8133fe85d",
+  "prompts": {},
+  "sessions": {
+    "s_459531e39da425": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "579d6de1-74ab-41e0-8bc7-62b54da21e43",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Thomas Lekanger <thomas.lekanger@hotmail.com>"
+    }
+  }
+}
