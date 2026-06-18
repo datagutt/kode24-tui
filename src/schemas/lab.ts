@@ -129,12 +129,15 @@ export type Pano = z.infer<typeof PanoSchema>;
 // Viewport-aware field: can be a direct value, a per-viewport object, or null
 const viewportBoolean = z.union([
   z.boolean(),
-  z.object({ desktop: z.boolean(), mobile: z.boolean().optional() }),
+  z.object({ desktop: z.boolean().optional(), mobile: z.boolean().optional() }),
   z.null(),
 ]);
 
 const viewportString = z.union([
-  z.object({ desktop: z.union([z.string(), z.null()]), mobile: z.string().optional() }),
+  z.object({
+    desktop: z.union([z.string(), z.null()]).optional(),
+    mobile: z.string().optional(),
+  }),
   z.null(),
 ]);
 
@@ -172,7 +175,7 @@ export const ResultSchema = z.object({
   tags: z.array(z.string()),
   feedId: z.string(),
   byline: z.string(),
-  bylineImage: z.string(),
+  bylineImage: z.string().optional(),
   paywall: z.boolean(),
   published: z.preprocess((val) => (val === "" ? new Date(0) : val), z.coerce.date()),
   url: z.string(),

@@ -44,7 +44,10 @@ const NewFrontpageSchema = z.object({
 
 // Transform a lab Result to an Article format
 function transformResultToArticle(result: z.infer<typeof ResultSchema>): Article {
-  const urlId = result.url.split("/").pop() ?? String(result.id);
+  // Article URLs are /artikkel/{slug}/{id}; keep the full slug path so the
+  // article fetch hits the canonical URL directly instead of relying on a redirect.
+  const urlId =
+    new URL(result.url).pathname.replace(/^\/artikkel\//, "") || String(result.id);
   return {
     id: urlId,
     title: result.title,
