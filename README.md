@@ -4,7 +4,7 @@ a terminal user interface for browsing [kode24.no](https://kode24.no) — norway
 
 read articles, browse job listings, filter by tags, and check upcoming events, all without leaving your terminal.
 
-built with [react](https://react.dev), [@opentui](https://github.com/anthropics/opentui), and [bun](https://bun.sh).
+built with [react](https://react.dev), [@opentui](https://github.com/anomalyco/opentui), and [bun](https://bun.sh).
 
 ## install
 
